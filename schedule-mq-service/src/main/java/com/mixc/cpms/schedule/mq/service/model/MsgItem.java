@@ -1,5 +1,6 @@
 package com.mixc.cpms.schedule.mq.service.model;
 
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
 import lombok.Data;
 
 /**
@@ -18,4 +19,11 @@ public class MsgItem {
      * 到期执行时间，秒级
      */
     private Long deadlineSeconds;
+
+    public static MsgItem build(long id, DelayedMsgDTO dto) {
+        MsgItem msgItem = new MsgItem();
+        msgItem.setId(id);
+        msgItem.setDeadlineSeconds(dto.getDeadlineSeconds());
+        return msgItem;
+    }
 }

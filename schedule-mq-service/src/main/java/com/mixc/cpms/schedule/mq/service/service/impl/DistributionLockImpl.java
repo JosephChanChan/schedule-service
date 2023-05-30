@@ -1,9 +1,8 @@
 package com.mixc.cpms.schedule.mq.service.service.impl;
 
 import com.mixc.cpms.schedule.mq.service.common.Constant;
-import com.mixc.cpms.schedule.mq.service.common.NumberKit;
-import com.mixc.cpms.schedule.mq.service.common.StringKit;
-import com.mixc.cpms.schedule.mq.service.common.TimeKit;
+import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
+import com.mixc.cpms.schedule.mq.client.kit.StringKit;
 import com.mixc.cpms.schedule.mq.service.config.ApplicationConfig;
 import com.mixc.cpms.schedule.mq.service.dao.IDistributionLockMapper;
 import com.mixc.cpms.schedule.mq.service.model.DistributionLock;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 基于数据库实现的分布式锁

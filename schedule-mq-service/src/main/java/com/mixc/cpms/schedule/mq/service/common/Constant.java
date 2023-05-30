@@ -6,11 +6,6 @@ package com.mixc.cpms.schedule.mq.service.common;
  */
 public class Constant {
 
-    public static final String RANDOM_STRING =
-            "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static final String NUM_STRING = "1234567890";
-
     /**
      * MQDispatcher线程数
      */

@@ -1,6 +1,7 @@
-package com.mixc.cpms.schedule.mq.service.common;
+package com.mixc.cpms.schedule.mq.client.kit;
 
-import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
+
+import com.mixc.cpms.schedule.mq.client.exception.BusinessException;
 
 import java.util.Collection;
 import java.util.Map;

@@ -1,5 +1,8 @@
 package com.mixc.cpms.schedule.mq.service.common;
 
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
+import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
+
 /**
  * @author Joseph
  * @since 2022/11/24

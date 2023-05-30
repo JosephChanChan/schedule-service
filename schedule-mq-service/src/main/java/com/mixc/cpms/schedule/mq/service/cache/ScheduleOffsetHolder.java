@@ -1,7 +1,6 @@
 package com.mixc.cpms.schedule.mq.service.cache;
 
 import com.mixc.cpms.schedule.mq.service.common.Constant;
-import com.mixc.cpms.schedule.mq.service.common.NumberKit;
 import com.mixc.cpms.schedule.mq.service.common.ThreadFactoryImpl;
 import com.mixc.cpms.schedule.mq.service.config.ApplicationConfig;
 import com.mixc.cpms.schedule.mq.service.service.IScheduleOffsetService;

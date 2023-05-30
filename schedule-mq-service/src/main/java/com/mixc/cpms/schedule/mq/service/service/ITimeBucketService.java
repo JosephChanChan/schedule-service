@@ -1,10 +1,10 @@
 package com.mixc.cpms.schedule.mq.service.service;
 
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.SaveMsgRes;
 import com.mixc.cpms.schedule.mq.service.model.dto.TimeSegmentDTO;
 
-import java.sql.SQLSyntaxErrorException;
 import java.util.List;
 
 /**
@@ -36,9 +36,10 @@ public interface ITimeBucketService {
     /**
      * 写入延迟消息
      *
+     * @param serviceCode 消息所属服务编码
      * @param dto dto
      */
-    long putDelayedMsg(DelayedMsgDTO dto);
+    SaveMsgRes putDelayedMsg(String serviceCode, DelayedMsgDTO dto);
 
     /**
      * 根据msgId检索消息内容

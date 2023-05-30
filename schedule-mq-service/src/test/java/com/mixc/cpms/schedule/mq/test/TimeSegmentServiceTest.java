@@ -1,10 +1,8 @@
 package com.mixc.cpms.schedule.mq.test;
 
 import com.mixc.cpms.schedule.mq.service.ScheduleMqServiceApplication;
-import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,8 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.sql.SQLSyntaxErrorException;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 

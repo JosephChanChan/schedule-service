@@ -1,5 +1,7 @@
 package com.mixc.cpms.schedule.mq.service.controller;
 
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
+import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
 import com.mixc.cpms.schedule.mq.service.cache.MsgDeliverInfoHolder;
 import com.mixc.cpms.schedule.mq.service.cache.ScheduleOffsetHolder;
 import com.mixc.cpms.schedule.mq.service.cache.TimeBucketWheel;
@@ -10,7 +12,8 @@ import com.mixc.cpms.schedule.mq.service.job.*;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import com.mixc.cpms.schedule.mq.service.model.MsgItem;
 import com.mixc.cpms.schedule.mq.service.model.ScheduleOffset;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.SaveMsgRes;
 import com.mixc.cpms.schedule.mq.service.model.dto.TimeSegmentDTO;
 import com.mixc.cpms.schedule.mq.service.service.IDistributionLockService;
 import com.mixc.cpms.schedule.mq.service.service.IMQDispatcher;
@@ -20,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -264,16 +266,18 @@ public class ScheduleController {
 
     /**
      * 延迟消息写到对应时间轮
+     *
+     * @return 消息偏移量，时间片名称-偏移量id
      */
-    public void putDelayedMsg(DelayedMsgDTO dto) {
+    public SaveMsgRes putDelayedMsg(DelayedMsgDTO dto) {
         if (!serverReady()) {
             log.warn("TimeBucket putDelayedMsg server not ready yet");
-            return;
+            return null;
         }
 
-        long id = timeBucketService.putDelayedMsg(dto);
+        SaveMsgRes saveMsgRes = timeBucketService.putDelayedMsg(config.getScheduleServiceCode(), dto);
 
-        MsgItem msgItem = dto.convertSimpleMsgDTO(id);
+        MsgItem msgItem = MsgItem.build(saveMsgRes.id, dto);
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
 
         if (deadlineSeconds <= wheelRolling.getTimeBoundRightSec()) {
@@ -284,6 +288,8 @@ public class ScheduleController {
             // 即使wheel此时发生了切换，会抛出异常让客户端重试
             wheelNext.put(msgItem);
         }
+
+        return saveMsgRes;
     }
 
     private void initializeHolder() {

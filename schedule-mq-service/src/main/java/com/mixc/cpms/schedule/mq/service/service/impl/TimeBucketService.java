@@ -1,19 +1,19 @@
 package com.mixc.cpms.schedule.mq.service.service.impl;
 
-import cn.hutool.core.lang.generator.UUIDGenerator;
 import cn.hutool.core.util.IdUtil;
+import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
 import com.mixc.cpms.schedule.mq.service.common.*;
 import com.mixc.cpms.schedule.mq.service.config.ApplicationConfig;
 import com.mixc.cpms.schedule.mq.service.config.SpringCoordinator;
 import com.mixc.cpms.schedule.mq.service.dao.ITimeBucketMapper;
 import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
 import com.mixc.cpms.schedule.mq.service.model.dto.LimitDTO;
+import com.mixc.cpms.schedule.mq.client.dto.SaveMsgRes;
 import com.mixc.cpms.schedule.mq.service.model.dto.TimeSegmentDTO;
 import com.mixc.cpms.schedule.mq.service.service.IDistributionLockService;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,13 +21,10 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLSyntaxErrorException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author Joseph
@@ -122,8 +119,8 @@ public class TimeBucketService implements ITimeBucketService {
     }
 
     @Override
-    public long putDelayedMsg(DelayedMsgDTO dto) {
-        log.info("TimeBucket putDelayedMsg dto={}", dto);
+    public SaveMsgRes putDelayedMsg(String serviceCode, DelayedMsgDTO dto) {
+        log.info("TimeBucket putDelayedMsg serviceCode={} dto={}", serviceCode, dto);
 
         Long deadlineSeconds = dto.getDeadlineSeconds();
         long limitTime = TimeKit.nowSeconds() + Constant.SECONDS_OF_30_DAYS;
@@ -138,9 +135,11 @@ public class TimeBucketService implements ITimeBucketService {
         Long segment = segments.get(minIdx);
 
         // 消息落库
-        long id = insert(String.valueOf(segment), dto);
+        String segmentName = String.valueOf(segment);
+        long id = insert(segmentName, dto);
         log.info("TimeBucket putDelayedMsg done id={}", id);
-        return id;
+
+        return SaveMsgRes.builder().id(id).segment(segmentName).build();
     }
 
     @Override

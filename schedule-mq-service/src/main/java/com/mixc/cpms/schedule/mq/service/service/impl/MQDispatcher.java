@@ -1,18 +1,17 @@
 package com.mixc.cpms.schedule.mq.service.service.impl;
 
+import com.mixc.cpms.schedule.mq.client.kit.StringKit;
 import com.mixc.cpms.schedule.mq.service.cache.MsgDeliverInfoHolder;
 import com.mixc.cpms.schedule.mq.service.cache.ScheduleOffsetHolder;
 import com.mixc.cpms.schedule.mq.service.common.*;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import com.mixc.cpms.schedule.mq.service.mq.MQManager;
-import com.mixc.cpms.schedule.mq.service.model.MsgItem;
 import com.mixc.cpms.schedule.mq.service.service.IMQDispatcher;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

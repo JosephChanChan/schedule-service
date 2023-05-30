@@ -1,5 +1,6 @@
 package com.mixc.cpms.schedule.mq.service.common;
 
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
 import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
 import lombok.Data;
 import lombok.Getter;
