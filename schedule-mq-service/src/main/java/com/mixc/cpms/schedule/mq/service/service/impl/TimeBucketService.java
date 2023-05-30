@@ -38,8 +38,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TimeBucketService implements ITimeBucketService {
 
-    private static final String CREATE_NEW_SEGMENT_DIS_LOCK = "CREATE_NEW_SEGMENT_DIS_LOCK";
-
 
     private final ApplicationConfig applicationConfig;
 
@@ -95,7 +93,7 @@ public class TimeBucketService implements ITimeBucketService {
         long intervalSeconds = Constant.SECONDS_OF_30_MINUTES;
 
         String lockOwner = IdUtil.fastSimpleUUID();
-        distributionLockService.lock(CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner, 30);
+        distributionLockService.lock(Constant.CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner, 10);
 
         try {
             ITimeBucketService self = springCoordinator.getBean(ITimeBucketService.class);
@@ -111,7 +109,7 @@ public class TimeBucketService implements ITimeBucketService {
             }
         }
         finally {
-            distributionLockService.unlock(CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner);
+            distributionLockService.unlock(Constant.CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner);
         }
     }
 

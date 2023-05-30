@@ -11,13 +11,11 @@ import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import com.mixc.cpms.schedule.mq.service.model.MsgItem;
 import com.mixc.cpms.schedule.mq.service.model.ScheduleOffset;
 import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
-import com.mixc.cpms.schedule.mq.service.model.dto.LimitDTO;
 import com.mixc.cpms.schedule.mq.service.model.dto.TimeSegmentDTO;
+import com.mixc.cpms.schedule.mq.service.service.IDistributionLockService;
 import com.mixc.cpms.schedule.mq.service.service.IMQDispatcher;
 import com.mixc.cpms.schedule.mq.service.service.IScheduleOffsetService;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import com.mixc.cpms.schedule.mq.service.service.impl.MQDispatcher;
-import com.mixc.cpms.schedule.mq.service.service.impl.TimeBucketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -76,6 +74,11 @@ public class ScheduleController {
      * 调度偏移量服务
      */
     private final IScheduleOffsetService scheduleOffsetService;
+
+    /**
+     * 分布式锁服务
+     */
+    private final IDistributionLockService distributionLockService;
 
     /**
      * 消息投递情况缓存类
@@ -299,7 +302,7 @@ public class ScheduleController {
         retryDeliverService.start(msgDeliverInfoHolder, mqDispatcher);
         preloadTimeSegmentService.start(timeBucketService, mqDispatcher, this);
         flushScheduleOffsetService.start(scheduleOffsetHolder);
-        checkTimeSegmentService.start(timeBucketService);
+        checkTimeSegmentService.start(timeBucketService, distributionLockService);
     }
 
     /**
