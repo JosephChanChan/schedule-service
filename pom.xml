@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cr.mixc.cpms</groupId>
+    <artifactId>schedule-service</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+
+    <modules>
+        <module>schedule-mq-client</module>
+        <module>schedule-mq-service</module>
+    </modules>
+
+    <properties>
+        <skipTests>true</skipTests>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <springboot.version>2.2.5.RELEASE</springboot.version>
+        <junit.version>5.7.2</junit.version>
+        <lombok.version>1.18.18</lombok.version>
+        <mybatisplus.version>3.5.2</mybatisplus.version>
+        <mysql.version>5.1.47</mysql.version>
+        <druid.version>1.1.16</druid.version>
+        <hutool.version>5.7.22</hutool.version>
+        <rocketmq.version>2.2.2</rocketmq.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${springboot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatisplus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+            <!-- RocketMQ -->
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>${rocketmq.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${springboot.version}</version>
+            </plugin>
+        </plugins>
+        <finalName>${project.artifactId}</finalName>
+    </build>
+
+    <!--打包到行云制品库maven配置 -->
+    <distributionManagement>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>artifactory-snapshots</name>
+            <url>http://registry.steam.crcloud.com/artifactory/crmixclifestyle-yj-2022-maven-local-snapshot</url>
+        </snapshotRepository>
+
+        <repository>
+            <id>central</id>
+            <name>artifactory-releases</name>
+            <url>http://registry.steam.crcloud.com/artifactory/crmixclifestyle-yj-2022-maven-local-release</url>
+        </repository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <repositories>
+                <repository>
+                    <id>mixc-cpms</id>
+                    <name>mixc snapshot</name>
+                    <url>http://nexus.mixcapp.cn/repository/mixc-cpms-snapshots/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+
+            <distributionManagement>
+                <!--打包到私有远程仓库 -->
+                <repository>
+                    <id>cpms-release</id>
+                    <name>Mixc-releases</name>
+                    <url>http://nexus.mixcapp.cn/repository/mixc-cpms/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>cpms-snap</id>
+                    <name>Mixc-snapshots</name>
+                    <url>http://nexus.mixcapp.cn/repository/mixc-cpms-snapshots/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
+</project>

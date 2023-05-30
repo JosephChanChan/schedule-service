@@ -1,0 +1,36 @@
+server:
+  port: 9999
+spring:
+  application:
+    name: cpms-schedule-mq-service
+    admin:
+      enabled: false
+  datasource:
+    # type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/schedule_stuff?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&nullCatalogMeansCurrent=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    hikari:
+      minimumIdle: 4
+      maximumPoolSize: 10
+      idleTimeout: 600000
+      maxLifetime: 600000
+      connectionTimeout: 10000
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    group: scheduleMqService
+    retry-next-server: true
+
+schedule:
+  serviceCode: A
+  distribution.lock.validSeconds: 30
+
+
+logging:
+  config: classpath:logback.xml
+  level:
+    root: info
