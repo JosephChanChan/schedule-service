@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -111,11 +112,9 @@ public class TimeBucketService implements ITimeBucketService {
     }
 
     @Override
-    public long insert(String tableName, DelayedMsgDTO delayedMsg) {
+    public long insert(String tableName, DelayedMsg delayedMsg) {
         log.info("TimeBucket insert new {} delayedMsg={}", tableName, delayedMsg);
-        Long id = timeBucketMapper.insert(tableName, delayedMsg);
-        log.info("TimeBucket insert id={}", id);
-        return id;
+        return timeBucketMapper.insert(tableName, delayedMsg);
     }
 
     @Override
@@ -123,6 +122,8 @@ public class TimeBucketService implements ITimeBucketService {
         log.info("TimeBucket putDelayedMsg serviceCode={} dto={}", serviceCode, dto);
 
         Long deadlineSeconds = dto.getDeadlineSeconds();
+        Date expectDeliverTime = dto.getExpectDeliverTime();
+        long deadlineSegment = TimeKit.convertSegmentStyle(expectDeliverTime);
         long limitTime = TimeKit.nowSeconds() + Constant.SECONDS_OF_30_DAYS;
         if (deadlineSeconds > limitTime) {
             log.error("TimeBucket putDelayedMsg delayed time over limitTime {} {}", deadlineSeconds, limitTime);
@@ -131,12 +132,14 @@ public class TimeBucketService implements ITimeBucketService {
 
         List<Long> segments = showAllSegments();
         // 找到能cover到期时间的时间片
-        int minIdx = CollectionsKit.binarySearchFloor(deadlineSeconds, segments, true);
+        int minIdx = CollectionsKit.binarySearchFloor(deadlineSegment, segments, true);
         Long segment = segments.get(minIdx);
 
         // 消息落库
         String segmentName = String.valueOf(segment);
-        long id = insert(segmentName, dto);
+        DelayedMsg model = DelayedMsg.build(applicationConfig.getScheduleServiceCode(), dto);
+        insert(segmentName, model);
+        Long id = model.getId();
         log.info("TimeBucket putDelayedMsg done id={}", id);
 
         return SaveMsgRes.builder().id(id).segment(segmentName).build();

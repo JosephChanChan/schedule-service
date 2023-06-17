@@ -6,6 +6,8 @@ package com.mixc.cpms.schedule.mq.service.common;
  */
 public class Constant {
 
+    public static final int ONE_SECOND = 1000;
+
     /**
      * MQDispatcher线程数
      */

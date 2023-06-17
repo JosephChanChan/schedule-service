@@ -304,7 +304,7 @@ public class ScheduleController {
         this.flushScheduleOffsetService = new FlushScheduleOffsetService();
         this.checkTimeSegmentService = new CheckTimeSegmentService();
 
-        rollingTimeService.start(wheelRolling, this);
+        rollingTimeService.start(wheelRolling, this, preloadTimeSegmentService);
         retryDeliverService.start(msgDeliverInfoHolder, mqDispatcher);
         preloadTimeSegmentService.start(timeBucketService, mqDispatcher, this);
         flushScheduleOffsetService.start(scheduleOffsetHolder);

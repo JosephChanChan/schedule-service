@@ -21,7 +21,7 @@ public interface ITimeBucketMapper {
 
     void createNewSegment(@Param("tableName") String tableName);
 
-    long insert(@Param("tableName") String tableName, @Param("delayedMsg") DelayedMsgDTO delayedMsg);
+    long insert(@Param("tableName") String tableName, @Param("delayedMsg") DelayedMsg delayedMsg);
 
     List<DelayedMsg> getMsgContent(@Param("tableName") String tableName, @Param("ids") List<Long> ids);
 

@@ -1,9 +1,12 @@
 package com.mixc.cpms.schedule.mq.service.model;
 
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.service.common.Constant;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 
 /**
  * @author Joseph
@@ -11,6 +14,8 @@ import java.time.ZoneOffset;
  */
 @Data
 public class DelayedMsg {
+
+
 
     /*
         create table `时间片`(
@@ -31,7 +36,7 @@ public class DelayedMsg {
     /**
      * 到期时间，投递
      */
-    private LocalDateTime deadline;
+    private Date deadline;
 
     /**
      * msg topic
@@ -80,8 +85,19 @@ public class DelayedMsg {
     public MsgItem convert() {
         MsgItem msgItem = new MsgItem();
         msgItem.setId(id);
-        msgItem.setDeadlineSeconds(deadline.toEpochSecond(ZoneOffset.of(ZoneOffset.systemDefault().getId())));
+        msgItem.setDeadlineSeconds(deadline.getTime() / Constant.ONE_SECOND);
         return msgItem;
+    }
+
+    public static DelayedMsg build(String code, DelayedMsgDTO dto) {
+        DelayedMsg delayedMsg = new DelayedMsg();
+        delayedMsg.setTopic(dto.getTopic());
+        delayedMsg.setTags(dto.getTags());
+        delayedMsg.setMsgContent(dto.getMsgContent());
+        delayedMsg.setDeadline(dto.getExpectDeliverTime());
+        delayedMsg.setScheduleServiceCode(code);
+        delayedMsg.setCreateTime(LocalDateTime.now());
+        return delayedMsg;
     }
 
 }

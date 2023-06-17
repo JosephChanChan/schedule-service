@@ -31,7 +31,7 @@ public interface ITimeBucketService {
     /**
      * 写入延迟消息
      */
-    long insert(String tableName, DelayedMsgDTO delayedMsg);
+    long insert(String tableName, DelayedMsg delayedMsg);
 
     /**
      * 写入延迟消息

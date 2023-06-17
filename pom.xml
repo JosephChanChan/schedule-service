@@ -20,7 +20,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <springboot.version>2.2.5.RELEASE</springboot.version>
+        <springboot.version>2.5.6</springboot.version>
         <junit.version>5.7.2</junit.version>
         <lombok.version>1.18.18</lombok.version>
         <mybatisplus.version>3.5.2</mybatisplus.version>
@@ -28,6 +28,8 @@
         <druid.version>1.1.16</druid.version>
         <hutool.version>5.7.22</hutool.version>
         <rocketmq.version>2.2.2</rocketmq.version>
+        <apache-http-client.version>4.5.14</apache-http-client.version>
+        <jackson.version>2.12.0</jackson.version>
     </properties>
 
     <dependencyManagement>
@@ -76,6 +78,17 @@
                 <groupId>org.apache.rocketmq</groupId>
                 <artifactId>rocketmq-spring-boot-starter</artifactId>
                 <version>${rocketmq.version}</version>
+            </dependency>
+            <!-- apache http client -->
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${apache-http-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

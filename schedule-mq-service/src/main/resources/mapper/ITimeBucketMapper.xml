@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mixc.cpms.schedule.mq.service.dao.ITimeBucketMapper">
 
-    <insert id="insert" useGeneratedKeys="true">
+    <insert id="insert" useGeneratedKeys="true" keyColumn="id" keyProperty="delayedMsg.id">
         insert into `${tableName}`(`schedule_service_code`, `topic`, `tags`, `deadline`, `msg_content`)
         values(#{delayedMsg.scheduleServiceCode}, #{delayedMsg.topic}, #{delayedMsg.tags}, #{delayedMsg.deadline}, #{delayedMsg.msgContent})
     </insert>

@@ -36,6 +36,11 @@ public class TimeKit {
         return LocalDateTime.parse(String.valueOf(time), DateTimeFormat.yyyyMMddHHmm).toEpochSecond(ZoneOffset.ofHours(8));
     }
 
+    public static long convertSegmentStyle(Date date) {
+        return Long.parseLong(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
+                .format(DateTimeFormat.yyyyMMddHHmm));
+    }
+
     public static long nowSeconds() {
         return System.currentTimeMillis() / ONE_SECOND;
     }

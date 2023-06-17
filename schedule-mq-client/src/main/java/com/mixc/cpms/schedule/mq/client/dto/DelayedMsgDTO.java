@@ -1,10 +1,12 @@
 package com.mixc.cpms.schedule.mq.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 
 
 /**
@@ -13,6 +15,8 @@ import java.time.ZoneOffset;
  */
 @Data
 public class DelayedMsgDTO {
+
+    private static final int ONE_SECOND_MILLIS = 1000;
 
     /**
      * 要投递的topic。不能为空
@@ -35,7 +39,8 @@ public class DelayedMsgDTO {
      * 消息期望投递的时间。
      * 当服务收到消息的时候 >= expectDeliverTime，消息会被立即投递
      */
-    private LocalDateTime expectDeliverTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date expectDeliverTime;
 
 
 
@@ -46,7 +51,7 @@ public class DelayedMsgDTO {
     }
 
     public Long getDeadlineSeconds() {
-        return expectDeliverTime.toEpochSecond(ZoneOffset.of(ZoneOffset.systemDefault().getId()));
+        return expectDeliverTime.getTime() / ONE_SECOND_MILLIS;
     }
 
 
