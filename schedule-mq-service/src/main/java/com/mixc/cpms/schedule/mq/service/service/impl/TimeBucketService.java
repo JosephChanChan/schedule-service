@@ -22,10 +22,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Joseph
@@ -243,6 +240,7 @@ public class TimeBucketService implements ITimeBucketService {
 
     @Override
     public Long maxIdFromSegment(String tableName) {
-        return timeBucketMapper.maxIdFromSegment(tableName, applicationConfig.getScheduleServiceCode());
+        return Optional.ofNullable(timeBucketMapper.maxIdFromSegment(tableName, applicationConfig.getScheduleServiceCode()))
+                .orElse(0L);
     }
 }

@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -207,10 +208,20 @@ public class ScheduleController {
         // 首先要知道有哪些时间片
         List<Long> segments = timeBucketService.showAllSegments();
         AssertKit.notEmpty(segments, "时间片集合不能为空");
-        log.info("ScheduleController abnormalRecover segments={}", segments);
 
-        // 保留下要追赶的时间片
-        segments = segments.stream().filter(segment -> segment >= segmentOffset).collect(Collectors.toList());
+        /*
+            保留下要追赶的时间片
+            segmentOffset <= k <= endSegment
+            第一个segment从idOffset开始
+         */
+
+        long nowSegment = TimeKit.convertSegmentStyle(new Date());
+        int idx = CollectionsKit.binarySearchFloor(nowSegment, segments, true);
+        long endSegment = idx > 0 ? segments.get(idx) : nowSegment;
+
+        segments = segments.stream()
+                .filter(segment -> segment >= segmentOffset && segment <= endSegment)
+                .collect(Collectors.toList());
         segments.sort((o1 ,o2) -> (int) (o1 - o2));
 
         // 分页读取并交给MQDispatcher投递
@@ -229,8 +240,9 @@ public class ScheduleController {
                 很快主线程回到这里再次读出1000条，再次提交
              */
 
-            long startId = 0;
-            Long maxId = timeBucketService.maxIdFromSegment(segment);
+            long startId = time == segmentOffset ? idOffset : 0;
+            long maxId = timeBucketService.maxIdFromSegment(segment);
+
             while (startId < maxId) {
                 long toId = startId + Constant.BATCH_READ_DELAYED_MSG_SIZE;
                 TimeSegmentDTO page = timeBucketService.loadSegmentInRange(segment, startId, toId);
