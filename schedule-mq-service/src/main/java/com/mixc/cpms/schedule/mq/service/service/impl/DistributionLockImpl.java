@@ -78,8 +78,8 @@ public class DistributionLockImpl implements IDistributionLockService {
 
     private boolean insertLock(DistributionLock lock) {
         try {
-            int id = mapper.insert(lock);
-            log.info("DistributionLock acquired lock! {} {}", lock.getLockName(), id);
+            mapper.insert(lock);
+            log.info("DistributionLock acquired lock! {}", lock.getLockName());
             return true;
         }
         catch (DuplicateKeyException e) {

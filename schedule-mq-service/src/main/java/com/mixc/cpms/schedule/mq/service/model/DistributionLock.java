@@ -12,11 +12,6 @@ import java.time.LocalDateTime;
 public class DistributionLock {
 
     /**
-     * ID
-     */
-    private Integer id;
-
-    /**
      * 锁名
      * 建立唯一索引
      */
