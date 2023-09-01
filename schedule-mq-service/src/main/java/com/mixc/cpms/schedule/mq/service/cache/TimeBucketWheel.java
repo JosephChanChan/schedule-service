@@ -130,7 +130,8 @@ public class TimeBucketWheel {
         /*
             先写入缓冲队列，可以避免：
             1.和RollingTimeService争抢tick读锁。
-            2.万一发生较长时间停顿tick落后于真实时间，避免基于错误的tick计算错误的bucket下标，等到RollingTimeService恢复后计算出正确的tick放入
+            2.万一发生较长时间停顿tick落后于真实时间，避免基于错误的tick计算错误的bucket下标，
+                等到RollingTimeService恢复后计算出正确的tick放入
          */
         bufferQueue.add(msgItem);
     }

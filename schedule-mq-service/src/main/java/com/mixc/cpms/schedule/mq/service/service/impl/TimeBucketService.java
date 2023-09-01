@@ -160,7 +160,6 @@ public class TimeBucketService implements ITimeBucketService {
     @Override
     public TimeSegmentDTO loadNextSegment(Long timeStart) {
         List<Long> timeSegments = showAllSegments();
-
         // 下一个时间片min{i} > timeStart
         int i = CollectionsKit.binarySearchFloor(timeStart, timeSegments, false);
         if (NumberKit.lt0(i)) {
@@ -210,9 +209,7 @@ public class TimeBucketService implements ITimeBucketService {
     @Override
     public TimeSegmentDTO loadSegmentFrom(String specificSegment, Long startId) {
         log.info("TimeBucket loadSegmentFrom={} startId={}", specificSegment, startId);
-
         int batchSize = Constant.BATCH_READ_DELAYED_MSG_SIZE;
-
         LimitDTO limitDTO = new LimitDTO();
         limitDTO.setFromId(startId);
         String scheduleServiceCode = applicationConfig.getScheduleServiceCode();
@@ -234,7 +231,6 @@ public class TimeBucketService implements ITimeBucketService {
         });
 
         log.info("TimeBucket loadSegmentFrom done {} startId={} actualCount={}", specificSegment, startId, delayedMsgList.size());
-
         return TimeSegmentDTO.build(null, Long.parseLong(specificSegment), delayedMsgList);
     }
 

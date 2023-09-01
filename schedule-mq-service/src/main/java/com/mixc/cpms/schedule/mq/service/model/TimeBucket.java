@@ -61,24 +61,19 @@ public class TimeBucket {
 
     public List<Long> trigger() {
         long nowSec = TimeKit.nowSeconds();
-
         int size = list.size(), i = 0;
-
         if (log.isDebugEnabled()) {
             log.debug("TimeSegment being trigger tick={} size={} nowSec={}", tick, size, nowSec);
         }
 
         List<Long> deliverList = new ArrayList<>(32);
-
         for (Iterator<MsgItem> iterator = list.iterator(); iterator.hasNext() && i <= size; i++) {
 
             MsgItem msg = iterator.next();
             Long deadlineSeconds = msg.getDeadlineSeconds();
-
             if (nowSec < deadlineSeconds) {
                 continue;
             }
-
             deliverList.add(msg.getId());
             iterator.remove();
         }

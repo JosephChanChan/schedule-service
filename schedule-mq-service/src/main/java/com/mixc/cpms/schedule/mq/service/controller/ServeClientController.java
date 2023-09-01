@@ -28,11 +28,9 @@ public class ServeClientController {
     @PostMapping("putMsg")
     public Result<SaveMsgRes> putMsg(@RequestBody DelayedMsgDTO dto) {
         log.info("accept new message dto={}", dto);
-
         dto.checkParams();
 
         SaveMsgRes saveMsgRes = scheduleController.putDelayedMsg(dto);
-
         log.info("put new message res={}", saveMsgRes);
         return Result.ok(saveMsgRes);
     }

@@ -288,7 +288,6 @@ public class ScheduleController {
         }
 
         SaveMsgRes saveMsgRes = timeBucketService.putDelayedMsg(config.getScheduleServiceCode(), dto);
-
         MsgItem msgItem = MsgItem.build(saveMsgRes.id, dto);
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
 
@@ -300,7 +299,6 @@ public class ScheduleController {
             // 即使wheel此时发生了切换，会抛出异常让客户端重试
             wheelNext.put(msgItem);
         }
-
         return saveMsgRes;
     }
 
