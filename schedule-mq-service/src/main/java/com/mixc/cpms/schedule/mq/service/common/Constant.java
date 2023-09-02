@@ -6,10 +6,7 @@ package com.mixc.cpms.schedule.mq.service.common;
  */
 public class Constant {
 
-    public static final String RANDOM_STRING =
-            "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static final String NUM_STRING = "1234567890";
+    public static final int ONE_SECOND = 1000;
 
     /**
      * MQDispatcher线程数
@@ -32,11 +29,21 @@ public class Constant {
     public static final int CHECK_PRELOAD_TIME_SEGMENT_INTERVAL = 10000;
 
     /**
+     * 最大支持消息的延迟投递天数
+     */
+    public static final int MAX_DELAYED_DAYS = 30;
+
+    /**
      * 30天的秒数
      */
     public static final long SECONDS_OF_30_DAYS = 3600 * 24 * 30;
 
     public static final long SECONDS_OF_30_MINUTES = 1800;
+
+    /**
+     * 创建时间片的锁名
+     */
+    public static final String CREATE_NEW_SEGMENT_DIS_LOCK = "CREATE_NEW_SEGMENT_DIS_LOCK";
 
     /**
      * 竞争分布式锁失败后暂停时间

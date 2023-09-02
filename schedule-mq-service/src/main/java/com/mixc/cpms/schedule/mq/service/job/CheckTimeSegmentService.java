@@ -1,18 +1,15 @@
 package com.mixc.cpms.schedule.mq.service.job;
 
-import com.mixc.cpms.schedule.mq.service.cache.ScheduleOffsetHolder;
+import cn.hutool.core.util.IdUtil;
 import com.mixc.cpms.schedule.mq.service.common.Constant;
 import com.mixc.cpms.schedule.mq.service.common.DateTimeFormat;
 import com.mixc.cpms.schedule.mq.service.common.ThreadFactoryImpl;
 import com.mixc.cpms.schedule.mq.service.common.TimeKit;
-import com.mixc.cpms.schedule.mq.service.controller.ScheduleController;
+import com.mixc.cpms.schedule.mq.service.service.IDistributionLockService;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.BadSqlGrammarException;
 
-import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -34,9 +31,12 @@ public class CheckTimeSegmentService {
 
     private ITimeBucketService timeBucketService;
 
+    private IDistributionLockService distributionLockService;
 
-    public void start(ITimeBucketService timeBucketService) {
+
+    public void start(ITimeBucketService timeBucketService, IDistributionLockService distributionLockService) {
         this.timeBucketService = timeBucketService;
+        this.distributionLockService = distributionLockService;
 
         log.info("CheckTimeSegmentService beginning...");
         driver.scheduleAtFixedRate(new CheckTimeSegmentJob(), 10, 10, TimeUnit.SECONDS);
@@ -57,16 +57,24 @@ public class CheckTimeSegmentService {
             try {
                 List<Long> segments = timeBucketService.showAllSegments();
                 Long maxSegment = segments.stream().max(Comparator.naturalOrder()).orElse(0L);
-                long newSegment = Long.parseLong(LocalDateTime.now().plusDays(30).format(DateTimeFormat.yyyyMMddHHmm));
+                long newSegment = Long.parseLong(LocalDateTime.now().plusDays(Constant.MAX_DELAYED_DAYS)
+                        .format(DateTimeFormat.yyyyMMddHHmm));
 
                 // 现在时间 + 30天 > maxSegment，可以创建新时间片了
                 if (newSegment > maxSegment) {
+
+                    String lockOwner = IdUtil.fastSimpleUUID();
+                    distributionLockService.lock(Constant.CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner, 10);
+
                     try {
                         timeBucketService.createNewSegment(TimeKit.plus30Minutes(maxSegment));
                     }
                     catch (BadSqlGrammarException e) {
-                        // 这里的做法有点粗暴，更好的办法是上分布式锁?
-                        log.warn("CheckTimeSegmentJob createNewSegment fail errorMsg={}", e.getMessage());
+                        // 上分布式锁后不该出现的问题
+                        log.error("CheckTimeSegmentJob createNewSegment fail", e);
+                    }
+                    finally {
+                        distributionLockService.unlock(Constant.CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner);
                     }
                 }
             }

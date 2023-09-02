@@ -1,19 +1,19 @@
 package com.mixc.cpms.schedule.mq.service.service.impl;
 
-import cn.hutool.core.lang.generator.UUIDGenerator;
 import cn.hutool.core.util.IdUtil;
+import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
 import com.mixc.cpms.schedule.mq.service.common.*;
 import com.mixc.cpms.schedule.mq.service.config.ApplicationConfig;
 import com.mixc.cpms.schedule.mq.service.config.SpringCoordinator;
 import com.mixc.cpms.schedule.mq.service.dao.ITimeBucketMapper;
 import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
 import com.mixc.cpms.schedule.mq.service.model.dto.LimitDTO;
+import com.mixc.cpms.schedule.mq.client.dto.SaveMsgRes;
 import com.mixc.cpms.schedule.mq.service.model.dto.TimeSegmentDTO;
 import com.mixc.cpms.schedule.mq.service.service.IDistributionLockService;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,13 +21,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLSyntaxErrorException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * @author Joseph
@@ -37,8 +32,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class TimeBucketService implements ITimeBucketService {
-
-    private static final String CREATE_NEW_SEGMENT_DIS_LOCK = "CREATE_NEW_SEGMENT_DIS_LOCK";
 
 
     private final ApplicationConfig applicationConfig;
@@ -95,7 +88,7 @@ public class TimeBucketService implements ITimeBucketService {
         long intervalSeconds = Constant.SECONDS_OF_30_MINUTES;
 
         String lockOwner = IdUtil.fastSimpleUUID();
-        distributionLockService.lock(CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner, 30);
+        distributionLockService.lock(Constant.CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner, 10);
 
         try {
             ITimeBucketService self = springCoordinator.getBean(ITimeBucketService.class);
@@ -111,23 +104,23 @@ public class TimeBucketService implements ITimeBucketService {
             }
         }
         finally {
-            distributionLockService.unlock(CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner);
+            distributionLockService.unlock(Constant.CREATE_NEW_SEGMENT_DIS_LOCK, lockOwner);
         }
     }
 
     @Override
-    public long insert(String tableName, DelayedMsgDTO delayedMsg) {
+    public long insert(String tableName, DelayedMsg delayedMsg) {
         log.info("TimeBucket insert new {} delayedMsg={}", tableName, delayedMsg);
-        Long id = timeBucketMapper.insert(tableName, delayedMsg);
-        log.info("TimeBucket insert id={}", id);
-        return id;
+        return timeBucketMapper.insert(tableName, delayedMsg);
     }
 
     @Override
-    public long putDelayedMsg(DelayedMsgDTO dto) {
-        log.info("TimeBucket putDelayedMsg dto={}", dto);
+    public SaveMsgRes putDelayedMsg(String serviceCode, DelayedMsgDTO dto) {
+        log.info("TimeBucket putDelayedMsg serviceCode={} dto={}", serviceCode, dto);
 
         Long deadlineSeconds = dto.getDeadlineSeconds();
+        Date expectDeliverTime = dto.getExpectDeliverTime();
+        long deadlineSegment = TimeKit.convertSegmentStyle(expectDeliverTime);
         long limitTime = TimeKit.nowSeconds() + Constant.SECONDS_OF_30_DAYS;
         if (deadlineSeconds > limitTime) {
             log.error("TimeBucket putDelayedMsg delayed time over limitTime {} {}", deadlineSeconds, limitTime);
@@ -136,13 +129,17 @@ public class TimeBucketService implements ITimeBucketService {
 
         List<Long> segments = showAllSegments();
         // 找到能cover到期时间的时间片
-        int minIdx = CollectionsKit.binarySearchFloor(deadlineSeconds, segments, true);
+        int minIdx = CollectionsKit.binarySearchFloor(deadlineSegment, segments, true);
         Long segment = segments.get(minIdx);
 
         // 消息落库
-        long id = insert(String.valueOf(segment), dto);
+        String segmentName = String.valueOf(segment);
+        DelayedMsg model = DelayedMsg.build(applicationConfig.getScheduleServiceCode(), dto);
+        insert(segmentName, model);
+        Integer id = model.getId();
         log.info("TimeBucket putDelayedMsg done id={}", id);
-        return id;
+
+        return SaveMsgRes.builder().id(id).segment(segmentName).build();
     }
 
     @Override
@@ -154,7 +151,7 @@ public class TimeBucketService implements ITimeBucketService {
     }
 
     @Override
-    public List<DelayedMsg> getMsgContents(String tableName, List<Long> ids) {
+    public List<DelayedMsg> getMsgContents(String tableName, List<Integer> ids) {
         // 这里会打出大量id，后面屏蔽掉
         log.info("TimeBucket getMsgContents time={} ids={}", tableName, ids);
         return timeBucketMapper.getMsgContent(tableName, ids);
@@ -163,7 +160,6 @@ public class TimeBucketService implements ITimeBucketService {
     @Override
     public TimeSegmentDTO loadNextSegment(Long timeStart) {
         List<Long> timeSegments = showAllSegments();
-
         // 下一个时间片min{i} > timeStart
         int i = CollectionsKit.binarySearchFloor(timeStart, timeSegments, false);
         if (NumberKit.lt0(i)) {
@@ -213,9 +209,7 @@ public class TimeBucketService implements ITimeBucketService {
     @Override
     public TimeSegmentDTO loadSegmentFrom(String specificSegment, Long startId) {
         log.info("TimeBucket loadSegmentFrom={} startId={}", specificSegment, startId);
-
         int batchSize = Constant.BATCH_READ_DELAYED_MSG_SIZE;
-
         LimitDTO limitDTO = new LimitDTO();
         limitDTO.setFromId(startId);
         String scheduleServiceCode = applicationConfig.getScheduleServiceCode();
@@ -237,12 +231,12 @@ public class TimeBucketService implements ITimeBucketService {
         });
 
         log.info("TimeBucket loadSegmentFrom done {} startId={} actualCount={}", specificSegment, startId, delayedMsgList.size());
-
         return TimeSegmentDTO.build(null, Long.parseLong(specificSegment), delayedMsgList);
     }
 
     @Override
     public Long maxIdFromSegment(String tableName) {
-        return timeBucketMapper.maxIdFromSegment(tableName, applicationConfig.getScheduleServiceCode());
+        return Optional.ofNullable(timeBucketMapper.maxIdFromSegment(tableName, applicationConfig.getScheduleServiceCode()))
+                .orElse(0L);
     }
 }

@@ -1,5 +1,6 @@
 package com.mixc.cpms.schedule.mq.service.job;
 
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
 import com.mixc.cpms.schedule.mq.service.cache.TimeBucketWheel;
 import com.mixc.cpms.schedule.mq.service.common.CollectionsKit;
 import com.mixc.cpms.schedule.mq.service.common.Constant;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -30,8 +32,18 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PreloadTimeSegmentService {
 
+    private static final Boolean LOADING = true;
+
+    private static final Boolean LOAD_DONE = false;
+
     private final ScheduledExecutorService driver =
             Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("PreloadTimeSegmentThread"));
+
+    /**
+     * 预加载时间片还要标志位的设计，是为了防止RollingTimeService切换时间片，wheelNext没有准备好。此时RollingTimeService立即发起一次
+     * 加载时间片。为避免并发加载，做防重处理。
+     */
+    private final AtomicBoolean loadingMark = new AtomicBoolean(LOAD_DONE);
 
     private IMQDispatcher mqDispatcher;
 
@@ -53,26 +65,19 @@ public class PreloadTimeSegmentService {
         driver.shutdown();
     }
 
-    public void preloadNextWheel(long nowWheelRightTimeBound, boolean hasWheelRolling) {
-        log.info("PreloadTimeSegmentService preloadNextWheel nowWheelRightTimeBound={} hasWheelRolling={}",
-                nowWheelRightTimeBound, hasWheelRolling);
+    public void preloadNextWheel(long nowWheelRightTimeBound) {
+        log.info("PreloadTimeSegmentService preloadNextWheel nowWheelRightTimeBound={}", nowWheelRightTimeBound);
 
         TimeSegmentDTO dto = timeBucketService.loadNextSegment(nowWheelRightTimeBound);
         if (null == dto) {
-            log.info("PreloadTimeSegmentService no next wheel nowWheelRightTimeBound={} hasWheelRolling={}",
-                    nowWheelRightTimeBound, hasWheelRolling);
+            log.info("PreloadTimeSegmentService no next wheel nowWheelRightTimeBound={}", nowWheelRightTimeBound);
             return;
         }
 
         TimeBucketWheel wheel = new TimeBucketWheel(nowWheelRightTimeBound, dto.getTimeBoundRight(), mqDispatcher);
 
         // 设置了wheel后，延迟消息就可以写入内存了
-        if (! hasWheelRolling) {
-            controller.setWheelRolling(wheel);
-        }
-        else {
-            controller.setWheelNext(wheel);
-        }
+        controller.setWheelNext(wheel);
 
         List<DelayedMsg> delayedMsgList = dto.getDelayedMsgList();
         if (CollectionsKit.isNotEmpty(delayedMsgList)) {
@@ -93,6 +98,8 @@ public class PreloadTimeSegmentService {
                 log.info("PreloadTimeSegmentService append msg done size={}", list.size());
             }
         }
+        long nextSegment = wheel.getTimeBoundRight();
+        log.info("PreloadTimeSegmentService preloadNextWheel done nextSegment={}", nextSegment);
     }
 
     class PreloadTimeSegmentJob implements Runnable {
@@ -102,13 +109,20 @@ public class PreloadTimeSegmentService {
             if (log.isDebugEnabled()) {
                 log.debug("PreloadTimeSegmentJob launching");
             }
-            if (controller.hasWheelRolling() && controller.hasWheelNext()) {
+            if (controller.hasWheelNext()) {
+                return;
+            }
+            if (! controller.hasWheelRolling()) {
+                log.warn("PreloadTimeSegmentJob detect wheelRolling is null!!! please check");
+                return;
+            }
+            if (! markLoading()) {
+                log.warn("PreloadTimeSegmentJob mark loading status fail!!! please check");
                 return;
             }
             try {
                 Long wheelRollingTime = controller.getWheelRollingTime();
-                boolean hasWheelRolling = controller.hasWheelRolling();
-                preloadNextWheel(wheelRollingTime, hasWheelRolling);
+                preloadNextWheel(wheelRollingTime);
                 if (log.isDebugEnabled()) {
                     log.debug("PreloadTimeSegmentJob done");
                 }
@@ -116,7 +130,24 @@ public class PreloadTimeSegmentService {
             catch (RuntimeException e) {
                 log.error("PreloadTimeSegmentJob error!!!", e);
             }
+            finally {
+                markLoadDone();
+            }
         }
+    }
+
+    /**
+     * 标识当前正在预加载时间片
+     *
+     * @return 标记成功，true
+     */
+    public boolean markLoading() {
+        return loadingMark.compareAndSet(LOAD_DONE, LOADING);
+    }
+
+    public void markLoadDone() {
+        AssertKit.check(! loadingMark.compareAndSet(LOADING, LOAD_DONE),
+                "PreloadTimeSegmentService markLoadDone fail!");
     }
 
 

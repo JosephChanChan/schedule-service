@@ -1,5 +1,6 @@
 package com.mixc.cpms.schedule.mq.service.common;
 
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
 import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
 import lombok.Data;
 import lombok.Getter;
@@ -33,6 +34,11 @@ public class TimeKit {
 
     public static long convertSeconds(Long time) {
         return LocalDateTime.parse(String.valueOf(time), DateTimeFormat.yyyyMMddHHmm).toEpochSecond(ZoneOffset.ofHours(8));
+    }
+
+    public static long convertSegmentStyle(Date date) {
+        return Long.parseLong(LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
+                .format(DateTimeFormat.yyyyMMddHHmm));
     }
 
     public static long nowSeconds() {

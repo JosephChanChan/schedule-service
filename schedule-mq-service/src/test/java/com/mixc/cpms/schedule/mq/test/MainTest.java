@@ -25,7 +25,12 @@ public class MainTest {
 
     public static void main(String[] args) {
         MainTest m = new MainTest();
-        m.subListTest();
+        m.localDateTime();
+    }
+
+    void localDateTime() {
+        LocalDateTime time = LocalDateTime.parse("2023-06-17 16:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        System.out.println(time.toString());
     }
 
     void subListTest() {

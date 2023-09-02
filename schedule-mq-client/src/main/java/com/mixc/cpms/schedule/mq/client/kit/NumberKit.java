@@ -1,4 +1,4 @@
-package com.mixc.cpms.schedule.mq.service.common;
+package com.mixc.cpms.schedule.mq.client.kit;
 
 import java.math.BigDecimal;
 

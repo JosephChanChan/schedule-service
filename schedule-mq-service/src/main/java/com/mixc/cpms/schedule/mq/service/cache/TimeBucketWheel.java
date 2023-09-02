@@ -1,6 +1,5 @@
 package com.mixc.cpms.schedule.mq.service.cache;
 
-import com.mixc.cpms.schedule.mq.service.common.AssertKit;
 import com.mixc.cpms.schedule.mq.service.common.CollectionsKit;
 import com.mixc.cpms.schedule.mq.service.common.TimeKit;
 import com.mixc.cpms.schedule.mq.service.enums.ErrorCode;
@@ -8,17 +7,12 @@ import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
 import com.mixc.cpms.schedule.mq.service.model.MsgItem;
 import com.mixc.cpms.schedule.mq.service.model.TimeBucket;
 import com.mixc.cpms.schedule.mq.service.service.IMQDispatcher;
-import com.mixc.cpms.schedule.mq.service.service.impl.MQDispatcher;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Joseph
@@ -136,7 +130,8 @@ public class TimeBucketWheel {
         /*
             先写入缓冲队列，可以避免：
             1.和RollingTimeService争抢tick读锁。
-            2.万一发生较长时间停顿tick落后于真实时间，避免基于错误的tick计算错误的bucket下标，等到RollingTimeService恢复后计算出正确的tick放入
+            2.万一发生较长时间停顿tick落后于真实时间，避免基于错误的tick计算错误的bucket下标，
+                等到RollingTimeService恢复后计算出正确的tick放入
          */
         bufferQueue.add(msgItem);
     }
@@ -153,7 +148,7 @@ public class TimeBucketWheel {
                 log.debug("TimeBucketWheel rolling now tick={}", tick);
             }
 
-            List<Long> deliverMsgIds = buckets[tick].trigger();
+            List<Integer> deliverMsgIds = buckets[tick].trigger();
             if (CollectionsKit.isNotEmpty(deliverMsgIds)) {
                 mqDispatcher.submit(timeBucket, deliverMsgIds);
             }

@@ -10,5 +10,5 @@ public interface IScheduleOffsetService {
 
     ScheduleOffset getOffset(String serviceCode);
 
-    boolean updateOffset(String serviceCode, Long segment, Long id);
+    boolean updateOffset(String serviceCode, Long segment, Integer id);
 }

@@ -1,4 +1,4 @@
-package com.mixc.cpms.schedule.mq.service.common;
+package com.mixc.cpms.schedule.mq.client.kit;
 
 import java.util.Random;
 
@@ -9,13 +9,17 @@ import java.util.Random;
  */
 public class StringKit {
 
+    public static final String RANDOM_STRING =
+            "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    public static final String NUM_STRING = "1234567890";
 
     public static String randomNumString(int count) {
         Random random = new Random();
         StringBuilder b = new StringBuilder();
-        int length = Constant.NUM_STRING.length();
+        int length = NUM_STRING.length();
         for (int i = 0; i < count; i++) {
-            b.append(Constant.NUM_STRING.charAt(random.nextInt(length)));
+            b.append(NUM_STRING.charAt(random.nextInt(length)));
         }
         return b.toString();
     }
@@ -27,9 +31,9 @@ public class StringKit {
     public static String randomString(int count) {
         Random random = new Random();
         StringBuilder b = new StringBuilder();
-        int length = Constant.RANDOM_STRING.length();
+        int length = RANDOM_STRING.length();
         for (int i = 0; i < count; i++) {
-            b.append(Constant.RANDOM_STRING.charAt(random.nextInt(length)));
+            b.append(RANDOM_STRING.charAt(random.nextInt(length)));
         }
         return b.toString();
     }

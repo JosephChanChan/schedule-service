@@ -2,6 +2,7 @@ package com.mixc.cpms.schedule.mq.service.job;
 
 import com.mixc.cpms.schedule.mq.service.cache.TimeBucketWheel;
 import com.mixc.cpms.schedule.mq.service.common.ThreadFactoryImpl;
+import com.mixc.cpms.schedule.mq.service.common.ThreadKit;
 import com.mixc.cpms.schedule.mq.service.common.TimeKit;
 import com.mixc.cpms.schedule.mq.service.controller.ScheduleController;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +27,15 @@ public class RollingTimeService {
 
     private ScheduleController scheduleController ;
 
-    public void start(TimeBucketWheel wheel, ScheduleController controller) {
+    private PreloadTimeSegmentService preloadTimeSegmentService ;
+
+    public void start(TimeBucketWheel wheel,
+                      ScheduleController controller,
+                      PreloadTimeSegmentService preloadTimeSegmentService) {
+
         this.wheel = wheel;
         this.scheduleController = controller;
+        this.preloadTimeSegmentService = preloadTimeSegmentService;
 
         log.info("RollingTimeService beginning...");
         driver.scheduleAtFixedRate(new RollingJob(), 1000, 100, TimeUnit.MILLISECONDS);
@@ -73,8 +80,16 @@ public class RollingTimeService {
                     log.debug("RollingJob done");
                 }
                 if (isTimeChange()) {
+
+                    // 必须等到下一个时间片被加载后才执行时间片切换
+                    while (! scheduleController.hasWheelNext()) {
+                        loadNextWheelQuickly();
+                    }
+
+                    long oldSegment = wheel.getTimeBoundRight();
                     scheduleController.swapWheel(RollingTimeService.this::swapWheel);
-                    log.info("RollingTimeService swapping TimeBucketWheel done new timeBoundRight is {}", wheel.getTimeBoundRight());
+                    log.info("RollingTimeService swapping TimeBucketWheel done old segment={} new segment={}",
+                            oldSegment, wheel.getTimeBoundRight());
                 }
             }
             catch (RuntimeException e) {
@@ -83,7 +98,22 @@ public class RollingTimeService {
         }
     }
 
-
+    private void loadNextWheelQuickly() {
+        log.info("RollingTimeService loadNextWheelQuickly start");
+        if (! preloadTimeSegmentService.markLoading()) {
+            log.info("RollingTimeService loadNextWheelQuickly markLoading fail. maybe PreloadTimeSegmentService is working");
+            // 先等一下到时间片被加载完成
+            ThreadKit.sleep(100);
+            return;
+        }
+        try {
+            preloadTimeSegmentService.preloadNextWheel(wheel.getTimeBoundRight());
+        }
+        finally {
+            preloadTimeSegmentService.markLoadDone();
+        }
+        log.info("RollingTimeService loadNextWheelQuickly done");
+    }
 
 
 }

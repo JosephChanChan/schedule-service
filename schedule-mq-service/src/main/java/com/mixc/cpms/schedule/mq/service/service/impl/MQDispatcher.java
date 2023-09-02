@@ -1,18 +1,17 @@
 package com.mixc.cpms.schedule.mq.service.service.impl;
 
+import com.mixc.cpms.schedule.mq.client.kit.StringKit;
 import com.mixc.cpms.schedule.mq.service.cache.MsgDeliverInfoHolder;
 import com.mixc.cpms.schedule.mq.service.cache.ScheduleOffsetHolder;
 import com.mixc.cpms.schedule.mq.service.common.*;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import com.mixc.cpms.schedule.mq.service.mq.MQManager;
-import com.mixc.cpms.schedule.mq.service.model.MsgItem;
 import com.mixc.cpms.schedule.mq.service.service.IMQDispatcher;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -48,12 +47,12 @@ public class MQDispatcher implements IMQDispatcher {
 
 
     @Override
-    public void submit(String timeBucket, Long msgId) {
+    public void submit(String timeBucket, Integer msgId) {
         submit(timeBucket, CollectionsKit.arrayList(msgId));
     }
 
     @Override
-    public void submit(String timeBucket, List<Long> msgIds) {
+    public void submit(String timeBucket, List<Integer> msgIds) {
         if (StringKit.blank(timeBucket) || CollectionsKit.isEmpty(msgIds)) {
             log.warn("MQDispatcher submit empty timeBucket={} msgIds={}", timeBucket, msgIds);
             return;
@@ -67,7 +66,7 @@ public class MQDispatcher implements IMQDispatcher {
             int batchSize = Constant.MQ_DISPATCHER_BATCH_SIZE;
             BatchOperationKit.batchExecute(size, batchSize, start -> {
                 int end = Math.min(start + batchSize, size);
-                List<Long> subList = msgIds.subList(start, end);
+                List<Integer> subList = msgIds.subList(start, end);
                 deliver(timeBucket, subList);
             });
         }
@@ -78,7 +77,7 @@ public class MQDispatcher implements IMQDispatcher {
         executor.submit(() -> doDeliver(delayedMsg.getTimeBucket(), delayedMsg));
     }
 
-    private void deliver(String timeBucket, List<Long> msgIds) {
+    private void deliver(String timeBucket, List<Integer> msgIds) {
         executor.submit(() -> {
             List<DelayedMsg> delayedMsgList = timeBucketService.getMsgContents(timeBucket, msgIds);
             for (DelayedMsg delayedMsg : delayedMsgList) {
@@ -100,7 +99,7 @@ public class MQDispatcher implements IMQDispatcher {
         }
     }
 
-    private void updateDeliverOffset(String timeBucket, Long id) {
+    private void updateDeliverOffset(String timeBucket, Integer id) {
         offsetHolder.updateOffset(Long.parseLong(timeBucket), id);
     }
 }

@@ -1,19 +1,16 @@
 package com.mixc.cpms.schedule.mq.test;
 
 import com.mixc.cpms.schedule.mq.service.ScheduleMqServiceApplication;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.sql.SQLSyntaxErrorException;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -24,7 +21,6 @@ import java.util.List;
  * @since 2023/1/18
  */
 @Slf4j
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = ScheduleMqServiceApplication.class)
 public class TimeSegmentServiceTest {
 
@@ -34,12 +30,15 @@ public class TimeSegmentServiceTest {
 
     @Test
     public void insert() {
-        DelayedMsgDTO msg = new DelayedMsgDTO();
-        msg.setScheduleServiceCode("xxxxx-2010");
-        msg.setDeadline(new Date(System.currentTimeMillis() + 3600 * 24 * 3));
+        DelayedMsg msg = new DelayedMsg();
+        msg.setTopic("A");
+        msg.setTags("B");
+        msg.setScheduleServiceCode("AAA");
+        msg.setCreateTime(LocalDateTime.now());
         msg.setMsgContent("test");
-        long id = timeSegmentService.insert("", msg);
-        log.info("timeSegment id={}", id);
+        msg.setDeadline(new Date());
+        long c = timeSegmentService.insert("202307140834", msg);
+        log.info("timeSegment c={}", c);
     }
 
     @Test

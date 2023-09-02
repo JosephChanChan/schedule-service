@@ -1,15 +1,12 @@
 package com.mixc.cpms.schedule.mq.service.mq;
 
-import com.mixc.cpms.schedule.mq.service.common.StringKit;
+import com.mixc.cpms.schedule.mq.client.kit.StringKit;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -27,7 +24,7 @@ public class MQManager {
 
 
     public void syncSend(DelayedMsg msg) {
-        Long id = msg.getId();
+        Integer id = msg.getId();
         String topic = msg.getTopic();
         String tags = msg.getTags();
         String msgContent = msg.getMsgContent();

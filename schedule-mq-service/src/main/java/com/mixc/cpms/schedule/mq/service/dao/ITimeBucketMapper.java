@@ -1,8 +1,7 @@
 package com.mixc.cpms.schedule.mq.service.dao;
 
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
-import com.mixc.cpms.schedule.mq.service.model.TimeBucket;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
 import com.mixc.cpms.schedule.mq.service.model.dto.LimitDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,9 +21,9 @@ public interface ITimeBucketMapper {
 
     void createNewSegment(@Param("tableName") String tableName);
 
-    long insert(@Param("tableName") String tableName, @Param("delayedMsg") DelayedMsgDTO delayedMsg);
+    long insert(@Param("tableName") String tableName, @Param("delayedMsg") DelayedMsg delayedMsg);
 
-    List<DelayedMsg> getMsgContent(@Param("tableName") String tableName, @Param("ids") List<Long> ids);
+    List<DelayedMsg> getMsgContent(@Param("tableName") String tableName, @Param("ids") List<Integer> ids);
 
     List<DelayedMsg> getMsgIndexByPage(@Param("tableName") String tableName,
                                        @Param("scheduleServiceCode") String scheduleServiceCode,

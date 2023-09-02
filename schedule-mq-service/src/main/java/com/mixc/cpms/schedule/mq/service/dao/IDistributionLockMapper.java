@@ -1,13 +1,8 @@
 package com.mixc.cpms.schedule.mq.service.dao;
 
-import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import com.mixc.cpms.schedule.mq.service.model.DistributionLock;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
-import com.mixc.cpms.schedule.mq.service.model.dto.LimitDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
 
 
 /**

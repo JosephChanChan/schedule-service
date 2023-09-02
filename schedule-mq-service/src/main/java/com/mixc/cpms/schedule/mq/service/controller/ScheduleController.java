@@ -1,5 +1,7 @@
 package com.mixc.cpms.schedule.mq.service.controller;
 
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
+import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
 import com.mixc.cpms.schedule.mq.service.cache.MsgDeliverInfoHolder;
 import com.mixc.cpms.schedule.mq.service.cache.ScheduleOffsetHolder;
 import com.mixc.cpms.schedule.mq.service.cache.TimeBucketWheel;
@@ -10,20 +12,19 @@ import com.mixc.cpms.schedule.mq.service.job.*;
 import com.mixc.cpms.schedule.mq.service.model.DelayedMsg;
 import com.mixc.cpms.schedule.mq.service.model.MsgItem;
 import com.mixc.cpms.schedule.mq.service.model.ScheduleOffset;
-import com.mixc.cpms.schedule.mq.service.model.dto.DelayedMsgDTO;
-import com.mixc.cpms.schedule.mq.service.model.dto.LimitDTO;
+import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.SaveMsgRes;
 import com.mixc.cpms.schedule.mq.service.model.dto.TimeSegmentDTO;
+import com.mixc.cpms.schedule.mq.service.service.IDistributionLockService;
 import com.mixc.cpms.schedule.mq.service.service.IMQDispatcher;
 import com.mixc.cpms.schedule.mq.service.service.IScheduleOffsetService;
 import com.mixc.cpms.schedule.mq.service.service.ITimeBucketService;
-import com.mixc.cpms.schedule.mq.service.service.impl.MQDispatcher;
-import com.mixc.cpms.schedule.mq.service.service.impl.TimeBucketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -78,6 +79,11 @@ public class ScheduleController {
     private final IScheduleOffsetService scheduleOffsetService;
 
     /**
+     * 分布式锁服务
+     */
+    private final IDistributionLockService distributionLockService;
+
+    /**
      * 消息投递情况缓存类
      */
     private final MsgDeliverInfoHolder msgDeliverInfoHolder;
@@ -127,14 +133,14 @@ public class ScheduleController {
 
         String segmentName = LocalDateTime.now().format(DateTimeFormat.yyyyMMddHHmm);
         long nowTime = Long.parseLong(segmentName);
-        long segmentOffset = Long.parseLong(offset.getScheduleOffset().split("-")[0]);
-        long idOffset = Long.parseLong(offset.getScheduleOffset().split("-")[1]);
+        long timeSegment = offset.getTimeSegment();
+        long idOffset = offset.getIdOffset();
 
-        if (nowTime <= segmentOffset) {
-            normalRecover(segmentOffset, idOffset);
+        if (nowTime <= timeSegment) {
+            normalRecover(timeSegment, idOffset);
         }
         else {
-            abnormalRecover(segmentOffset, idOffset);
+            abnormalRecover(timeSegment, idOffset);
         }
     }
 
@@ -202,10 +208,20 @@ public class ScheduleController {
         // 首先要知道有哪些时间片
         List<Long> segments = timeBucketService.showAllSegments();
         AssertKit.notEmpty(segments, "时间片集合不能为空");
-        log.info("ScheduleController abnormalRecover segments={}", segments);
 
-        // 保留下要追赶的时间片
-        segments = segments.stream().filter(segment -> segment >= segmentOffset).collect(Collectors.toList());
+        /*
+            保留下要追赶的时间片
+            segmentOffset <= k <= endSegment
+            第一个segment从idOffset开始
+         */
+
+        long nowSegment = TimeKit.convertSegmentStyle(new Date());
+        int idx = CollectionsKit.binarySearchFloor(nowSegment, segments, true);
+        long endSegment = idx > 0 ? segments.get(idx) : nowSegment;
+
+        segments = segments.stream()
+                .filter(segment -> segment >= segmentOffset && segment <= endSegment)
+                .collect(Collectors.toList());
         segments.sort((o1 ,o2) -> (int) (o1 - o2));
 
         // 分页读取并交给MQDispatcher投递
@@ -224,8 +240,9 @@ public class ScheduleController {
                 很快主线程回到这里再次读出1000条，再次提交
              */
 
-            long startId = 0;
-            Long maxId = timeBucketService.maxIdFromSegment(segment);
+            long startId = time == segmentOffset ? idOffset : 0;
+            long maxId = timeBucketService.maxIdFromSegment(segment);
+
             while (startId < maxId) {
                 long toId = startId + Constant.BATCH_READ_DELAYED_MSG_SIZE;
                 TimeSegmentDTO page = timeBucketService.loadSegmentInRange(segment, startId, toId);
@@ -261,16 +278,17 @@ public class ScheduleController {
 
     /**
      * 延迟消息写到对应时间轮
+     *
+     * @return 消息偏移量，时间片名称-偏移量id
      */
-    public void putDelayedMsg(DelayedMsgDTO dto) {
+    public SaveMsgRes putDelayedMsg(DelayedMsgDTO dto) {
         if (!serverReady()) {
             log.warn("TimeBucket putDelayedMsg server not ready yet");
-            return;
+            return null;
         }
 
-        long id = timeBucketService.putDelayedMsg(dto);
-
-        MsgItem msgItem = dto.convertSimpleMsgDTO(id);
+        SaveMsgRes saveMsgRes = timeBucketService.putDelayedMsg(config.getScheduleServiceCode(), dto);
+        MsgItem msgItem = MsgItem.build(saveMsgRes.id, dto);
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
 
         if (deadlineSeconds <= wheelRolling.getTimeBoundRightSec()) {
@@ -281,6 +299,7 @@ public class ScheduleController {
             // 即使wheel此时发生了切换，会抛出异常让客户端重试
             wheelNext.put(msgItem);
         }
+        return saveMsgRes;
     }
 
     private void initializeHolder() {
@@ -295,11 +314,11 @@ public class ScheduleController {
         this.flushScheduleOffsetService = new FlushScheduleOffsetService();
         this.checkTimeSegmentService = new CheckTimeSegmentService();
 
-        rollingTimeService.start(wheelRolling, this);
+        rollingTimeService.start(wheelRolling, this, preloadTimeSegmentService);
         retryDeliverService.start(msgDeliverInfoHolder, mqDispatcher);
         preloadTimeSegmentService.start(timeBucketService, mqDispatcher, this);
         flushScheduleOffsetService.start(scheduleOffsetHolder);
-        checkTimeSegmentService.start(timeBucketService);
+        checkTimeSegmentService.start(timeBucketService, distributionLockService);
     }
 
     /**

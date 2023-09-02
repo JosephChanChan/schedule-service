@@ -11,9 +11,9 @@ import java.util.List;
  */
 public interface IMQDispatcher {
 
-    void submit(String timeBucket, Long msgId);
+    void submit(String timeBucket, Integer msgId);
 
-    void submit(String timeBucket, List<Long> msgIds);
+    void submit(String timeBucket, List<Integer> msgIds);
 
     void retryDeliver(DelayedMsg delayedMsg);
 

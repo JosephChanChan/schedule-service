@@ -4,41 +4,33 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author Joseph
- * @since 2023/1/18
+ * @since 2023/9/2
  */
 @Getter
 @Setter
 @Accessors(chain = true)
-@TableName("schedule_offset")
-public class ScheduleOffset {
+@TableName("heart_beat")
+public class HeartBeat {
 
     /*
-        create table `schedule_offset`(
-            `schedule_service_code` varchar(30) PRIMARY key,
-            `time_segment` bigint UNSIGNED not null,
-            `id_offset` int UNSIGNED not null,
-            `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP(0)
+        CREATE TABLE `heart_beat` (
+          `schedule_service_code` varchar(36) NOT NULL,
+          `report_time` datetime NOT NULL,
+          PRIMARY KEY (`schedule_service_code`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
      */
 
     @TableId(value = "schedule_service_code", type = IdType.INPUT)
     private String scheduleServiceCode;
 
-    @TableField("time_segment")
-    private Long timeSegment;
-
-    @TableField("id_offset")
-    private Integer idOffset;
-
-    @TableField("update_time")
-    private LocalDateTime updateTime;
+    @TableField("report_time")
+    private Date reportTime;
 }
