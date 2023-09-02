@@ -24,7 +24,7 @@ public class MQManager {
 
 
     public void syncSend(DelayedMsg msg) {
-        Long id = msg.getId();
+        Integer id = msg.getId();
         String topic = msg.getTopic();
         String tags = msg.getTags();
         String msgContent = msg.getMsgContent();

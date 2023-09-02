@@ -30,12 +30,12 @@ public class ScheduleOffsetHolder {
     /**
      * 上一次保存成功的偏移量
      */
-    private long lastFlushOffset = 0;
+    private int lastFlushOffset = 0;
 
     /**
      * MQ消息分派器线程池的每个线程更新自己的投递offset
      */
-    private long[] offsetTables = new long[Constant.MQ_DISPATCHER_CORE_THREADS];
+    private int[] offsetTables = new int[Constant.MQ_DISPATCHER_CORE_THREADS];
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -66,7 +66,7 @@ public class ScheduleOffsetHolder {
 
             // 更新时间片和offset table
             this.nowTimeSegment = timeSegment;
-            this.offsetTables = new long[Constant.MQ_DISPATCHER_CORE_THREADS];
+            this.offsetTables = new int[Constant.MQ_DISPATCHER_CORE_THREADS];
             this.lastFlushOffset = 0;
         }
         finally {
@@ -78,7 +78,7 @@ public class ScheduleOffsetHolder {
     /**
      * 更新时间片的最新推进offset
      */
-    public void updateOffset(long time, long offset) {
+    public void updateOffset(long time, int offset) {
         if (time != nowTimeSegment) {
             return;
         }
@@ -92,7 +92,7 @@ public class ScheduleOffsetHolder {
         lock.readLock().lock();
         try {
             if (time == nowTimeSegment) {
-                long oldOffset = offsetTables[threadIndex];
+                int oldOffset = offsetTables[threadIndex];
                 offsetTables[threadIndex] = Math.max(oldOffset, offset);
             }
         }
@@ -110,8 +110,8 @@ public class ScheduleOffsetHolder {
             log.debug("ScheduleOffsetHolder flushOffset acquired write lock!");
         }
         try {
-            long max = -1;
-            for (long offset : offsetTables) {
+            int max = -1;
+            for (int offset : offsetTables) {
                 max = Math.max(max, offset);
             }
             if (max <= lastFlushOffset) {

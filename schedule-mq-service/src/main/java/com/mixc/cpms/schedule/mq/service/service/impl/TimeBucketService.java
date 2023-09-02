@@ -136,7 +136,7 @@ public class TimeBucketService implements ITimeBucketService {
         String segmentName = String.valueOf(segment);
         DelayedMsg model = DelayedMsg.build(applicationConfig.getScheduleServiceCode(), dto);
         insert(segmentName, model);
-        Long id = model.getId();
+        Integer id = model.getId();
         log.info("TimeBucket putDelayedMsg done id={}", id);
 
         return SaveMsgRes.builder().id(id).segment(segmentName).build();
@@ -151,7 +151,7 @@ public class TimeBucketService implements ITimeBucketService {
     }
 
     @Override
-    public List<DelayedMsg> getMsgContents(String tableName, List<Long> ids) {
+    public List<DelayedMsg> getMsgContents(String tableName, List<Integer> ids) {
         // 这里会打出大量id，后面屏蔽掉
         log.info("TimeBucket getMsgContents time={} ids={}", tableName, ids);
         return timeBucketMapper.getMsgContent(tableName, ids);

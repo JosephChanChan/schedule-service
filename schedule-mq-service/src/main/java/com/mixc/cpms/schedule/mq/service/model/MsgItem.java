@@ -13,14 +13,14 @@ public class MsgItem {
     /**
      * ID
      */
-    private Long id;
+    private Integer id;
 
     /**
      * 到期执行时间，秒级
      */
     private Long deadlineSeconds;
 
-    public static MsgItem build(long id, DelayedMsgDTO dto) {
+    public static MsgItem build(int id, DelayedMsgDTO dto) {
         MsgItem msgItem = new MsgItem();
         msgItem.setId(id);
         msgItem.setDeadlineSeconds(dto.getDeadlineSeconds());

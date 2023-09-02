@@ -35,9 +35,10 @@ public class ScheduleOffsetService implements IScheduleOffsetService {
     }
 
     @Override
-    public boolean updateOffset(String serviceCode, Long segment, Long id) {
+    public boolean updateOffset(String serviceCode, Long segment, Integer id) {
         ScheduleOffset model = new ScheduleOffset();
-        model.setScheduleOffset(segment+"-"+id);
+        model.setTimeSegment(segment);
+        model.setIdOffset(id);
         int update = scheduleOffsetMapper.update(model,
                 Wrappers.<ScheduleOffset>lambdaUpdate().eq(ScheduleOffset::getScheduleServiceCode, serviceCode));
 

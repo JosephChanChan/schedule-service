@@ -15,7 +15,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class SaveMsgRes {
 
-    public Long id;
+    public Integer id;
 
     private String segment;
 }

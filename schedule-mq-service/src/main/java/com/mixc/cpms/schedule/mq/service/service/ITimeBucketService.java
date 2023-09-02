@@ -44,7 +44,7 @@ public interface ITimeBucketService {
     /**
      * 根据msgId检索消息内容
      */
-    List<DelayedMsg> getMsgContents(String tableName, List<Long> ids);
+    List<DelayedMsg> getMsgContents(String tableName, List<Integer> ids);
 
     /**
      * 加载时间片，从timeStart开始(不包括timeStart)的下一个最近时间片

@@ -133,14 +133,14 @@ public class ScheduleController {
 
         String segmentName = LocalDateTime.now().format(DateTimeFormat.yyyyMMddHHmm);
         long nowTime = Long.parseLong(segmentName);
-        long segmentOffset = Long.parseLong(offset.getScheduleOffset().split("-")[0]);
-        long idOffset = Long.parseLong(offset.getScheduleOffset().split("-")[1]);
+        long timeSegment = offset.getTimeSegment();
+        long idOffset = offset.getIdOffset();
 
-        if (nowTime <= segmentOffset) {
-            normalRecover(segmentOffset, idOffset);
+        if (nowTime <= timeSegment) {
+            normalRecover(timeSegment, idOffset);
         }
         else {
-            abnormalRecover(segmentOffset, idOffset);
+            abnormalRecover(timeSegment, idOffset);
         }
     }
 

@@ -23,18 +23,22 @@ public class ScheduleOffset {
 
     /*
         create table `schedule_offset`(
-            `id` bigint UNSIGNED PRIMARY key auto_increment,
-            `schedule_service_code` varchar(30) not null,
-            `schedule_offset` varchar(50) not null,
+            `schedule_service_code` varchar(30) PRIMARY key,
+            `time_segment` bigint UNSIGNED not null,
+            `id_offset` int UNSIGNED not null,
             `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP(0)
-        );
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
      */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
-    @TableField("schedule_service_code")
+
+    @TableId(value = "schedule_service_code", type = IdType.INPUT)
     private String scheduleServiceCode;
-    @TableField("schedule_offset")
-    private String scheduleOffset;
+
+    @TableField("time_segment")
+    private Long timeSegment;
+
+    @TableField("id_offset")
+    private Integer idOffset;
+
     @TableField("update_time")
     private LocalDateTime updateTime;
 }

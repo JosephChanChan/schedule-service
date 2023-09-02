@@ -148,7 +148,7 @@ public class TimeBucketWheel {
                 log.debug("TimeBucketWheel rolling now tick={}", tick);
             }
 
-            List<Long> deliverMsgIds = buckets[tick].trigger();
+            List<Integer> deliverMsgIds = buckets[tick].trigger();
             if (CollectionsKit.isNotEmpty(deliverMsgIds)) {
                 mqDispatcher.submit(timeBucket, deliverMsgIds);
             }

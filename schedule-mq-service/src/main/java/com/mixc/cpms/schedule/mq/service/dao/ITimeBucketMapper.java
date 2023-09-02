@@ -23,7 +23,7 @@ public interface ITimeBucketMapper {
 
     long insert(@Param("tableName") String tableName, @Param("delayedMsg") DelayedMsg delayedMsg);
 
-    List<DelayedMsg> getMsgContent(@Param("tableName") String tableName, @Param("ids") List<Long> ids);
+    List<DelayedMsg> getMsgContent(@Param("tableName") String tableName, @Param("ids") List<Integer> ids);
 
     List<DelayedMsg> getMsgIndexByPage(@Param("tableName") String tableName,
                                        @Param("scheduleServiceCode") String scheduleServiceCode,

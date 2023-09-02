@@ -15,18 +15,20 @@ import java.util.Date;
 @Data
 public class DelayedMsg {
 
-
-
     /*
-        create table `时间片`(
-            `id` bigint UNSIGNED PRIMARY key auto_increment,
-            `schedule_service_code` varchar(30) not null,
-            `deadline` datetime not null,
-            `msg_content` text not null
-            `create_time` datetime not null default NOW()
-        );
+        CREATE TABLE `时间片` (
+          `id` int unsigned NOT NULL AUTO_INCREMENT,
+          `schedule_service_code` varchar(36) NOT NULL,
+          `deadline` datetime NOT NULL,
+          `topic` varchar(50) not null,
+          `tags` varchar(50) not null default '',
+          `msg_content` text NOT NULL,
+          `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          KEY `IDX_SERVICE_CODE` (`schedule_service_code`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
      */
-    private Long id;
+    private Integer id;
 
     /**
      * 消息调度服务编码
@@ -53,7 +55,7 @@ public class DelayedMsg {
      */
     private String msgContent;
 
-    private LocalDateTime createTime;
+    private Date createTime;
 
 
 
@@ -96,7 +98,7 @@ public class DelayedMsg {
         delayedMsg.setMsgContent(dto.getMsgContent());
         delayedMsg.setDeadline(dto.getExpectDeliverTime());
         delayedMsg.setScheduleServiceCode(code);
-        delayedMsg.setCreateTime(LocalDateTime.now());
+        delayedMsg.setCreateTime(new Date());
         return delayedMsg;
     }
 
