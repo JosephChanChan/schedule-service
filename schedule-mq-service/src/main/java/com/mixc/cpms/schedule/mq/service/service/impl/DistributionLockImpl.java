@@ -11,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -33,7 +31,6 @@ public class DistributionLockImpl implements IDistributionLockService {
 
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void lock(String name, String owner, Integer validSeconds) {
         if (NumberKit.lte0(validSeconds)) {
             validSeconds = applicationConfig.getDistributionLockValidSec();
@@ -69,7 +66,6 @@ public class DistributionLockImpl implements IDistributionLockService {
     }
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void unlock(String name, String owner) {
         if (StringKit.notBlank(name) && StringKit.notBlank(owner) ) {
             mapper.delLock(name, owner);
