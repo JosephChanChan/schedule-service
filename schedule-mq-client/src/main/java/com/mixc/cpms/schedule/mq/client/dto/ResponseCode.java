@@ -10,7 +10,8 @@ import lombok.Getter;
 public enum ResponseCode {
 
     SUCCESS("SUCCESS", "请求成功"),
-    UNKNOWN_ERROR("UNKNOWN_ERROR", "未知错误")
+    UNKNOWN_ERROR("UNKNOWN_ERROR", "未知错误"),
+    BUSINESS_ERROR("BUSINESS_ERROR", "业务异常")
     ;
 
     String code;

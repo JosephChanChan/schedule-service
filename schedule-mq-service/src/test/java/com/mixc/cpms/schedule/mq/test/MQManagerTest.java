@@ -23,7 +23,7 @@ public class MQManagerTest {
     @Test
     public void sendMsg() {
         DelayedMsg msg = new DelayedMsg();
-        msg.setId(123L);
+        msg.setId(123);
         msg.setTopic("testTopic");
         msg.setTags("test");
         msg.setScheduleServiceCode("A");

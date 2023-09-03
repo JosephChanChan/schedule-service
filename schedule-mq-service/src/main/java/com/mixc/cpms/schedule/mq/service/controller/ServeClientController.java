@@ -1,8 +1,10 @@
 package com.mixc.cpms.schedule.mq.service.controller;
 
 import com.mixc.cpms.schedule.mq.client.dto.DelayedMsgDTO;
+import com.mixc.cpms.schedule.mq.client.dto.ResponseCode;
 import com.mixc.cpms.schedule.mq.client.dto.Result;
 import com.mixc.cpms.schedule.mq.client.dto.SaveMsgRes;
+import com.mixc.cpms.schedule.mq.service.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,8 +32,17 @@ public class ServeClientController {
         log.info("accept new message dto={}", dto);
         dto.checkParams();
 
-        SaveMsgRes saveMsgRes = scheduleController.putDelayedMsg(dto);
-        log.info("put new message res={}", saveMsgRes);
-        return Result.ok(saveMsgRes);
+        try {
+            SaveMsgRes saveMsgRes = scheduleController.putDelayedMsg(dto);
+            log.info("put new message res={}", saveMsgRes);
+            return Result.ok(saveMsgRes);
+        }
+        catch (Exception e) {
+            if (e instanceof BusinessException) {
+                return Result.error(ResponseCode.BUSINESS_ERROR.getCode(), ((BusinessException) e).getMsg());
+            }
+            return Result.error();
+        }
+
     }
 }

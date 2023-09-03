@@ -34,7 +34,7 @@ public class TimeSegmentServiceTest {
         msg.setTopic("A");
         msg.setTags("B");
         msg.setScheduleServiceCode("AAA");
-        msg.setCreateTime(LocalDateTime.now());
+        msg.setCreateTime(new Date());
         msg.setMsgContent("test");
         msg.setDeadline(new Date());
         long c = timeSegmentService.insert("202307140834", msg);
