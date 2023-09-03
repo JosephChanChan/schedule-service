@@ -81,6 +81,7 @@ public class MQDispatcher implements IMQDispatcher {
         executor.submit(() -> {
             List<DelayedMsg> delayedMsgList = timeBucketService.getMsgContents(timeBucket, msgIds);
             for (DelayedMsg delayedMsg : delayedMsgList) {
+                log.info("MQDispatcher deliver msgId={} deadline={}", delayedMsg.getId(), delayedMsg.getDeadline());
                 executor.submit(() -> doDeliver(timeBucket, delayedMsg));
             }
         });

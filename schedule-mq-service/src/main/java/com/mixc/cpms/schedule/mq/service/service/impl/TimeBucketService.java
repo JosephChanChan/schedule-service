@@ -1,6 +1,8 @@
 package com.mixc.cpms.schedule.mq.service.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.json.JSONUtil;
+import com.mixc.cpms.schedule.mq.client.kit.AssertKit;
 import com.mixc.cpms.schedule.mq.client.kit.NumberKit;
 import com.mixc.cpms.schedule.mq.service.common.*;
 import com.mixc.cpms.schedule.mq.service.config.ApplicationConfig;
@@ -48,7 +50,7 @@ public class TimeBucketService implements ITimeBucketService {
     public List<Long> showAllSegments() {
         List<String> list = timeBucketMapper.showAllTables();
         if (CollectionsKit.isEmpty(list)) {
-            return null;
+            return new ArrayList<>(0);
         }
         List<Long> ans = new ArrayList<>(list.size());
         for (String elm : list) {
@@ -130,6 +132,7 @@ public class TimeBucketService implements ITimeBucketService {
         List<Long> segments = showAllSegments();
         // 找到能cover到期时间的时间片
         int minIdx = CollectionsKit.binarySearchFloor(deadlineSegment, segments, true);
+        AssertKit.gt0(minIdx, String.format("no timeSegment can cover delayedMsg=%s", JSONUtil.toJsonStr(dto)));
         Long segment = segments.get(minIdx);
 
         // 消息落库

@@ -21,7 +21,7 @@ public class MsgDeliverInfoHolder {
      * 重新尝试投递的递增延迟时间，毫秒
      */
     private final Integer[] retryDeliverMillis = new Integer[]{
-            0, 100, 200, 1000, 10000, 60000
+            0, 200, 1000, 10000, 30000, 60000, 600000
     };
 
     /**
@@ -57,15 +57,13 @@ public class MsgDeliverInfoHolder {
 
         delayedMsg.incrRetryDeliverCount();
         byte count = delayedMsg.getRetryDeliverCount();
-        int retryDeliverMillis = getRetryDeliverMillis(count);
-
         if (count > maxRetryDeliverCount-1) {
             // todo 告警
             log.error("DelayedMsg retry deliver reach max times! timeBucket={} msgId={}",
-                    delayedMsg.getTimeBucket(), delayedMsg.getTimeBucket());
+                    delayedMsg.getTimeBucket(), delayedMsg.getId());
             return;
         }
-
+        int retryDeliverMillis = getRetryDeliverMillis(count);
         delayedMsg.setRetryDelayedMillis(retryDeliverMillis);
         delayedMsg.setLastFailDeliverTime(System.currentTimeMillis());
 

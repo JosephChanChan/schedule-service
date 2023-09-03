@@ -35,7 +35,8 @@ public class MQManager {
         SendResult sendResult = mqTemplate.syncSend(topic, msgContent);
         String msgId = sendResult.getMsgId();
         SendStatus sendStatus = sendResult.getSendStatus();
-        log.info("MQManager syncSend delayedMsg id={} msgId={} sendStatus={}", id, msgId, sendStatus);
+        log.info("MQManager syncSend delayedMsg id={} deadline={} rmqMsgId={} sendStatus={}",
+                id, msg.getDeadline(), msgId, sendStatus);
     }
 
     public void syncBatchSend(List<DelayedMsg> msgList) {

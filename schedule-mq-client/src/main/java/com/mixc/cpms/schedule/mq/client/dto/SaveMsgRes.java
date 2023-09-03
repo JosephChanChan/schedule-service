@@ -1,9 +1,6 @@
 package com.mixc.cpms.schedule.mq.client.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * @author Joseph
@@ -11,11 +8,12 @@ import lombok.ToString;
  */
 @Builder
 @ToString
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class SaveMsgRes {
 
-    public Integer id;
+    private Integer id;
 
     private String segment;
 }

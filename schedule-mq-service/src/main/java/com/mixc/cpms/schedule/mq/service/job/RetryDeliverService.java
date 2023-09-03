@@ -56,23 +56,18 @@ public class RetryDeliverService {
             if (log.isDebugEnabled()) {
                 log.debug("RetryDeliverJob launching");
             }
-
             LinkedList<DelayedMsg>[] reads = msgDeliverInfoHolder.getReads();
-
             try {
                 for (int i = 0; i < reads.length; i++) {
                     LinkedList<DelayedMsg> list = reads[i];
                     if (CollectionsKit.isEmpty(list)) {
                         continue;
                     }
-
                     if (log.isDebugEnabled()) {
                         log.debug("RetryDeliverJob dealing queueIdx={} waiting count={}", i, list.size());
                     }
-
                     int redeliverCount = 0;
                     long nowMillis = TimeKit.nowMillis();
-
                     for (Iterator<DelayedMsg> it = list.iterator(); it.hasNext(); ) {
 
                         DelayedMsg delayedMsg = it.next();

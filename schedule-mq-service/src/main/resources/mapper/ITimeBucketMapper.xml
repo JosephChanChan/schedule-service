@@ -12,7 +12,7 @@
     </select>
 
     <select id="getMsgContent" resultType="com.mixc.cpms.schedule.mq.service.model.DelayedMsg">
-        select `id`, msg_content, `topic`, `tags`
+        select `id`, msg_content, `topic`, `tags`, `deadline`
         from `${tableName}`
         where `id` in
         <foreach collection="ids" item="id" open="(" close=")" separator=",">

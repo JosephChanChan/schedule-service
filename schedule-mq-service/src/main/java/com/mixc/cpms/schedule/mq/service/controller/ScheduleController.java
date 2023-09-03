@@ -246,7 +246,6 @@ public class ScheduleController {
             while (startId < maxId) {
                 long toId = startId + Constant.BATCH_READ_DELAYED_MSG_SIZE;
                 TimeSegmentDTO page = timeBucketService.loadSegmentInRange(segment, startId, toId);
-
                 List<DelayedMsg> delayedMsgList = page.getDelayedMsgList();
                 mqDispatcher.submit(segment, delayedMsgList.stream().map(DelayedMsg::getId).collect(Collectors.toList()));
 
@@ -288,9 +287,11 @@ public class ScheduleController {
         }
 
         SaveMsgRes saveMsgRes = timeBucketService.putDelayedMsg(config.getScheduleServiceCode(), dto);
-        MsgItem msgItem = MsgItem.build(saveMsgRes.id, dto);
+        MsgItem msgItem = MsgItem.build(saveMsgRes.getId(), dto);
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
-
+        if (deadlineSeconds <= TimeKit.nowSeconds()) {
+            mqDispatcher.submit(saveMsgRes.getSegment(), saveMsgRes.getId());
+        }
         if (deadlineSeconds <= wheelRolling.getTimeBoundRightSec()) {
             // 即使wheel此时发生了切换，会抛出异常让客户端重试
             wheelRolling.put(msgItem);
@@ -303,7 +304,7 @@ public class ScheduleController {
     }
 
     private void initializeHolder() {
-        this.scheduleOffsetHolder.initialize(wheelRolling.getTimeBoundRight());
+        this.scheduleOffsetHolder.initialize();
         this.msgDeliverInfoHolder.initialize();
     }
 
@@ -350,7 +351,6 @@ public class ScheduleController {
 
         TimeBucketWheel waitClear = wheelRolling;
         wheelRolling = wheelNext;
-
         // wheelNext置空，Preload线程预加载下一个时间片，wheelNext指向下下个wheel
         this.wheelNext = null;
 
@@ -358,8 +358,7 @@ public class ScheduleController {
         if (null != waitClear) {
             waitClear.clear();
         }
-
-        scheduleOffsetHolder.nextTime(wheelRolling.getTimeBoundRight());
+        /*scheduleOffsetHolder.nextTime(wheelRolling.getTimeBoundRight());*/
     }
 
     public void setWheelNext(TimeBucketWheel wheel) {

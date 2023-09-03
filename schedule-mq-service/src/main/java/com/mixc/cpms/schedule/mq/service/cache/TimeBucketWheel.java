@@ -112,20 +112,14 @@ public class TimeBucketWheel {
         log.info("TimeBucketWheel put msgItem={} {}", msgItem, timeBoundRight);
 
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
-        if (deadlineSeconds <= timeBoundLeftSec) {
+        // 收到过期很久的msg也立即投递
+        /*if (deadlineSeconds <= timeBoundLeftSec) {
             log.error("TimeBucketWheel msgItem deadline over equal timeBoundLeft={} id={}", timeBoundLeft, msgItem.getId());
             throw new BusinessException(ErrorCode.DELAYED_TIME_NOT_MATCH_WHEEL);
-        }
+        }*/
         if (deadlineSeconds > timeBoundRightSec) {
             log.error("TimeBucketWheel msgItem deadline over timeBoundRight={} id={}", timeBoundRight, msgItem.getId());
             throw new BusinessException(ErrorCode.DELAYED_TIME_NOT_MATCH_WHEEL);
-        }
-
-        long nowSec = TimeKit.nowSeconds();
-        if (deadlineSeconds <= nowSec) {
-            // 立即投递，这里应该交给MQDispatcher（异步）
-            mqDispatcher.submit(timeBucket, msgItem.getId());
-            return;
         }
         /*
             先写入缓冲队列，可以避免：

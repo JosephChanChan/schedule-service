@@ -23,14 +23,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ScheduleOffsetHolder {
 
     /**
-     * 当前时间片
+     * 上一次保存成功的时间片
      */
-    private long nowTimeSegment ;
+    private long lastFlushSegment = 0;
 
     /**
      * 上一次保存成功的偏移量
      */
     private int lastFlushOffset = 0;
+
+    /**
+     * MQ消息分派器线程池的每个线程更新自己的投递timeSegment
+     */
+    private long[] timeSegmentTables = new long[Constant.MQ_DISPATCHER_CORE_THREADS];
 
     /**
      * MQ消息分派器线程池的每个线程更新自己的投递offset
@@ -44,17 +49,14 @@ public class ScheduleOffsetHolder {
     private final ApplicationConfig applicationConfig;
 
 
-    public void initialize(long timeSegment) {
+    public void initialize() {
         log.info("ScheduleOffsetHolder initialize begin");
-        lock.writeLock().lock();
-        this.nowTimeSegment = timeSegment;
-        lock.writeLock().unlock();
+        // nothing to do
         log.info("ScheduleOffsetHolder initialize done");
     }
 
     /**
      * 切换时间片，更新到下一个时间片
-     */
     public void nextTime(long timeSegment) {
         log.info("ScheduleOffsetHolder nextTime attempt to race lock");
         lock.writeLock().lock();
@@ -73,15 +75,12 @@ public class ScheduleOffsetHolder {
             log.info("ScheduleOffsetHolder nextTime update done");
             lock.writeLock().unlock();
         }
-    }
+    }*/
 
     /**
      * 更新时间片的最新推进offset
      */
     public void updateOffset(long time, int offset) {
-        if (time != nowTimeSegment) {
-            return;
-        }
         Thread thread = Thread.currentThread();
         if (!(thread instanceof ThreadFactoryImpl.AdvisedThread)) {
             return;
@@ -91,9 +90,16 @@ public class ScheduleOffsetHolder {
 
         lock.readLock().lock();
         try {
-            if (time == nowTimeSegment) {
-                int oldOffset = offsetTables[threadIndex];
-                offsetTables[threadIndex] = Math.max(oldOffset, offset);
+            if (time > timeSegmentTables[threadIndex]) {
+                timeSegmentTables[threadIndex] = time;
+                offsetTables[threadIndex] = offset;
+            }
+            else if (time == timeSegmentTables[threadIndex]) {
+                offsetTables[threadIndex] = Math.max(offset, offsetTables[threadIndex]);
+            }
+            else {
+                log.error("updateOffset timeSegment={} rollback to {} Thread={}",
+                        timeSegmentTables[threadIndex], time, threadIndex);
             }
         }
         finally {
@@ -110,15 +116,25 @@ public class ScheduleOffsetHolder {
             log.debug("ScheduleOffsetHolder flushOffset acquired write lock!");
         }
         try {
-            int max = -1;
-            for (int offset : offsetTables) {
-                max = Math.max(max, offset);
+            long maxTimeSegment = 0;
+            for (long timeSegment : timeSegmentTables) {
+                maxTimeSegment = Math.max(timeSegment, maxTimeSegment);
             }
-            if (max <= lastFlushOffset) {
+            if (maxTimeSegment < lastFlushSegment) {
                 return;
             }
-            if (offsetService.updateOffset(applicationConfig.getScheduleServiceCode(), nowTimeSegment, max)) {
-                lastFlushOffset = max;
+            int maxIdOffset = 0;
+            for (int i = 0; i < timeSegmentTables.length; i++) {
+                if (maxTimeSegment == timeSegmentTables[i]) {
+                    maxIdOffset = Math.max(maxIdOffset, offsetTables[i]);
+                }
+            }
+            if (maxIdOffset <= lastFlushOffset) {
+                return;
+            }
+            if (offsetService.updateOffset(applicationConfig.getScheduleServiceCode(), maxTimeSegment, maxIdOffset)) {
+                lastFlushSegment = maxTimeSegment;
+                lastFlushOffset = maxIdOffset;
             }
         }
         finally {
