@@ -287,16 +287,24 @@ public class ScheduleController {
         }
 
         SaveMsgRes saveMsgRes = timeBucketService.putDelayedMsg(config.getScheduleServiceCode(), dto);
-        MsgItem msgItem = MsgItem.build(saveMsgRes.getId(), dto);
+        MsgItem msgItem = MsgItem.build(saveMsgRes.getId(), saveMsgRes.getSegment(), dto);
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
         if (deadlineSeconds <= TimeKit.nowSeconds()) {
             mqDispatcher.submit(saveMsgRes.getSegment(), saveMsgRes.getId());
         }
         if (deadlineSeconds <= wheelRolling.getTimeBoundRightSec()) {
-            // 即使wheel此时发生了切换，会抛出异常让客户端重试
+            // 即使wheel此时发生了切换，会立即投递消息
             wheelRolling.put(msgItem);
         }
-        else if (null != wheelNext && deadlineSeconds <= wheelNext.getTimeBoundRightSec()) {
+        if (null == wheelNext) {
+            // 最多等500ms
+            long waitUpper = TimeKit.nowMillis() + 500;
+            while (null == wheelNext) {
+                AssertKit.check(TimeKit.nowMillis() > waitUpper, "putDelayedMsg fail! cause waiting next wheel");
+                ThreadKit.sleep(50);
+            }
+        }
+        if (deadlineSeconds <= wheelNext.getTimeBoundRightSec()) {
             // 即使wheel此时发生了切换，会抛出异常让客户端重试
             wheelNext.put(msgItem);
         }

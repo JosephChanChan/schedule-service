@@ -32,8 +32,8 @@ public class TimeKit {
 
 
 
-    public static long convertSeconds(Long time) {
-        return LocalDateTime.parse(String.valueOf(time), DateTimeFormat.yyyyMMddHHmm).toEpochSecond(ZoneOffset.ofHours(8));
+    public static long segmentConvertSeconds(Long segment) {
+        return LocalDateTime.parse(String.valueOf(segment), DateTimeFormat.yyyyMMddHHmm).toEpochSecond(ZoneOffset.ofHours(8));
     }
 
     public static long convertSegmentStyle(Date date) {

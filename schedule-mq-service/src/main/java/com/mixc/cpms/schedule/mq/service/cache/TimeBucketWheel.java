@@ -75,9 +75,9 @@ public class TimeBucketWheel {
 
     public TimeBucketWheel(Long leftTime, Long rightTime, IMQDispatcher mqDispatcher) {
         this.timeBoundLeft = leftTime;
-        this.timeBoundLeftSec = TimeKit.convertSeconds(leftTime);
+        this.timeBoundLeftSec = TimeKit.segmentConvertSeconds(leftTime);
         this.timeBoundRight = rightTime;
-        this.timeBoundRightSec = TimeKit.convertSeconds(rightTime);
+        this.timeBoundRightSec = TimeKit.segmentConvertSeconds(rightTime);
         this.timeBucket = String.valueOf(timeBoundRight);
         this.mqDispatcher = mqDispatcher;
         for (int i = 0; i < round; i++) {
@@ -113,10 +113,12 @@ public class TimeBucketWheel {
 
         Long deadlineSeconds = msgItem.getDeadlineSeconds();
         // 收到过期很久的msg也立即投递
-        /*if (deadlineSeconds <= timeBoundLeftSec) {
+        if (deadlineSeconds <= timeBoundLeftSec) {
             log.error("TimeBucketWheel msgItem deadline over equal timeBoundLeft={} id={}", timeBoundLeft, msgItem.getId());
-            throw new BusinessException(ErrorCode.DELAYED_TIME_NOT_MATCH_WHEEL);
-        }*/
+            /*throw new BusinessException(ErrorCode.DELAYED_TIME_NOT_MATCH_WHEEL);*/
+            mqDispatcher.submit(msgItem.getTimeSegment(), msgItem.getId());
+            return;
+        }
         if (deadlineSeconds > timeBoundRightSec) {
             log.error("TimeBucketWheel msgItem deadline over timeBoundRight={} id={}", timeBoundRight, msgItem.getId());
             throw new BusinessException(ErrorCode.DELAYED_TIME_NOT_MATCH_WHEEL);

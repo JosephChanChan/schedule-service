@@ -31,7 +31,6 @@ public class ServeClientController {
     public Result<SaveMsgRes> putMsg(@RequestBody DelayedMsgDTO dto) {
         log.info("accept new message dto={}", dto);
         dto.checkParams();
-
         try {
             SaveMsgRes saveMsgRes = scheduleController.putDelayedMsg(dto);
             log.info("put new message res={}", saveMsgRes);
@@ -43,6 +42,5 @@ public class ServeClientController {
             }
             return Result.error();
         }
-
     }
 }

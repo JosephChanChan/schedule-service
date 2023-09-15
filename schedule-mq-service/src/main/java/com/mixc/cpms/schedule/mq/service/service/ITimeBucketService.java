@@ -76,4 +76,6 @@ public interface ITimeBucketService {
     Long maxIdFromSegment(String tableName);
 
     void createNewSegment(String newSegmentName);
+
+    void batchInsertDelayedMsg(String segment, List<DelayedMsg> list);
 }

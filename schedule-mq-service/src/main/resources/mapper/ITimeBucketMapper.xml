@@ -7,6 +7,14 @@
         values(#{delayedMsg.scheduleServiceCode}, #{delayedMsg.topic}, #{delayedMsg.tags}, #{delayedMsg.deadline}, #{delayedMsg.msgContent})
     </insert>
 
+    <insert id="bulkInsert" >
+        insert into `${tableName}`(`schedule_service_code`, `topic`, `tags`, `deadline`, `msg_content`)
+        values
+        <foreach collection="delayedMsgList" item="delayedMsg" separator=",">
+            (#{delayedMsg.scheduleServiceCode}, #{delayedMsg.topic}, #{delayedMsg.tags}, #{delayedMsg.deadline}, #{delayedMsg.msgContent})
+        </foreach>
+    </insert>
+
     <select id="showAllTables" resultType="string">
         show tables
     </select>

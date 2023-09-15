@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
+
 /**
  * @author Joseph
  * @since 2023/1/18
@@ -84,9 +85,9 @@ public class TimeBucketService implements ITimeBucketService {
             }
         }
         // 当前时间片的秒数
-        long segmentSeconds = TimeKit.convertSeconds(segment);
+        long segmentSeconds = TimeKit.segmentConvertSeconds(segment);
         // 从当前时间起创建30天时间片的边界
-        long maxLimitSeconds = TimeKit.convertSeconds(nowTime) + Constant.SECONDS_OF_30_DAYS;
+        long maxLimitSeconds = TimeKit.segmentConvertSeconds(nowTime) + Constant.SECONDS_OF_30_DAYS;
         long intervalSeconds = Constant.SECONDS_OF_30_MINUTES;
 
         String lockOwner = IdUtil.fastSimpleUUID();
@@ -102,7 +103,7 @@ public class TimeBucketService implements ITimeBucketService {
                 self.createNewSegment(newSegment);
 
                 segment = Long.parseLong(newSegment);
-                segmentSeconds = TimeKit.convertSeconds(segment);
+                segmentSeconds = TimeKit.segmentConvertSeconds(segment);
             }
         }
         finally {
@@ -156,7 +157,7 @@ public class TimeBucketService implements ITimeBucketService {
     @Override
     public List<DelayedMsg> getMsgContents(String tableName, List<Integer> ids) {
         // 这里会打出大量id，后面屏蔽掉
-        log.info("TimeBucket getMsgContents time={} ids={}", tableName, ids);
+        log.info("TimeBucket getMsgContents time={} ids size={}", tableName, ids.size());
         return timeBucketMapper.getMsgContent(tableName, ids);
     }
 
@@ -241,5 +242,14 @@ public class TimeBucketService implements ITimeBucketService {
     public Long maxIdFromSegment(String tableName) {
         return Optional.ofNullable(timeBucketMapper.maxIdFromSegment(tableName, applicationConfig.getScheduleServiceCode()))
                 .orElse(0L);
+    }
+
+    @Override
+    public void batchInsertDelayedMsg(String segment, List<DelayedMsg> list) {
+        if (CollectionsKit.isEmpty(list)) {
+            return;
+        }
+        log.info("batchInsertDelayedMsg size={}", list.size());
+        timeBucketMapper.bulkInsert(segment, list);
     }
 }

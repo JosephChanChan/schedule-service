@@ -106,6 +106,10 @@ public class RollingTimeService {
             ThreadKit.sleep(100);
             return;
         }
+        if (scheduleController.hasWheelNext()) {
+            log.info("RollingTimeService loadNextWheelQuickly terminated cause hasWheelNext");
+            return;
+        }
         try {
             preloadTimeSegmentService.preloadNextWheel(wheel.getTimeBoundRight());
         }

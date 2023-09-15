@@ -20,10 +20,13 @@ public class MsgItem {
      */
     private Long deadlineSeconds;
 
-    public static MsgItem build(int id, DelayedMsgDTO dto) {
+    private String timeSegment;
+
+    public static MsgItem build(int id, String timeSegment, DelayedMsgDTO dto) {
         MsgItem msgItem = new MsgItem();
         msgItem.setId(id);
         msgItem.setDeadlineSeconds(dto.getDeadlineSeconds());
+        msgItem.setTimeSegment(timeSegment);
         return msgItem;
     }
 }
