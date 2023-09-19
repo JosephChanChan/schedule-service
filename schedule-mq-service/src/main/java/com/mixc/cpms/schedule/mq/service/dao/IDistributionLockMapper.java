@@ -18,4 +18,6 @@ public interface IDistributionLockMapper {
 
     Integer delLock(@Param("lockName") String lockName, @Param("lockOwner") String lockOwner);
 
+    Integer expireLock(@Param("lockName") String lockName, @Param("lockOwner") String lockOwner);
+
 }

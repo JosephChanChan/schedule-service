@@ -15,5 +15,12 @@
         delete from `distribution_lock` where `lock_name`=#{lockName} and `lock_owner`=#{lockOwner}
     </delete>
 
+    <delete id="expireLock" parameterType="string">
+        delete from `distribution_lock`
+               where `lock_name`=#{lockName}
+                 and `lock_owner`=#{lockOwner}
+                 and DATE_ADD(create_time, INTERVAL valid_times SECOND) &lt; NOW()
+    </delete>
+
 
 </mapper>

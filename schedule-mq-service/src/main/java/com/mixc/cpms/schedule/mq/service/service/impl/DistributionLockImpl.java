@@ -60,7 +60,7 @@ public class DistributionLockImpl implements IDistributionLockService {
                 }
             }
             if (null != lockInfo) {
-                mapper.delLock(name, owner);
+                mapper.expireLock(lockInfo.getLockName(), lockInfo.getLockOwner());
             }
         }
     }

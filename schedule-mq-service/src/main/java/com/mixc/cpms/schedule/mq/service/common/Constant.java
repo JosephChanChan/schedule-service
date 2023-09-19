@@ -48,6 +48,6 @@ public class Constant {
     /**
      * 竞争分布式锁失败后暂停时间
      */
-    public static final long THREAD_RACE_LOCK_INTERVAL_MILLIS = 10;
+    public static final long THREAD_RACE_LOCK_INTERVAL_MILLIS = 20;
 
 }
